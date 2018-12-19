@@ -1,4 +1,6 @@
 # WildLoggingDB - INCOMPLETE. NOT FOR PUBLIC USE (YET!)
+UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. You can find it [here](https://github.com/TheUrbanWild/WildLogging).
+
 After a merger, Restlet has changed its service terms. We need to remove our dependency on this service.
 
 We will transfer our dependency to Heroku, running a Postgres DB.
@@ -6,8 +8,6 @@ We will transfer our dependency to Heroku, running a Postgres DB.
 Incidentally, this development has the potential for use of the geo searching capabilities of Postgres.
 
 ## Why are we doing this?
-
-UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. 
 
 Restlet Cloud is the PaaS which we have been using. It's service hosted a database, fronted by a REST API, which the Urban Wild SPWA used to store wildlife sightings.
 
@@ -19,13 +19,14 @@ The result is much more useful, because we can add functionality which transform
 
 ## Try this too
 
-Follow along:  it's a good way to experience all the tools and processes, while having something which is easy to test.
+Follow along:  it's a good way to experience all the tools and processes, while having something which is easy to test. We're assuming you have a GitHub account already.
 
 ## Plan
 
 ### Set up identity, tools and services
 
 1. Create a project identity
+1. Create a new, fresh GitHub repo. Clone it locally
 1. Create a Restlet Account 
 1. Create a Heroku account
 1. Create an app with a postgres instance, on Heroku
@@ -65,7 +66,14 @@ A project identity is very useful for keeping communications and accounts separa
 
 We have set up a project alias on Alice's GMail account, and will use this mailbox identity to set-up any other accounts used by the project.
 
+## New GitHub Repository
+
+We created a new GitHub Repo [here]() to hold our project source code. We didn't put it in here, because we wanted to segregate it from the how-to documentation. That would have meant puting the project code in a sub-directory. This isn't supported by Heroku's deployment process. 
+
+You can create a new fresh repo, on GitHub  if you're following along, or fork ours.
+
 ## Set-up RESTlet
+
 We use Restlet Studio for building an and editing REST API definitions.
 
 The Restlet API for urban wild is public.  
@@ -120,9 +128,9 @@ Security is a huge concern for anything that we do and to have such a trustable 
 We need a Postgres client which is free, and usable from any of the Uni computers.
 
 We're using [OmniDB](https://omnidb.org/index.php?option=com_content&view=category&layout=blog&id=12&Itemid=149&lang=en). 
-This is a browser-based client. A web-based version is here: http://teampostgresql.herokuapp.com, or you can use [these instructions](https://github.com/AliceDigitalLabs/SupportingLiveProjects_2018/wiki/Additional-Tools-from-Github#omnidb) to set-up OmniBD on you H: drive. You can then use it on any CMDT PC.
+This is a browser-based client. A web-based version is here: http://teampostgresql.herokuapp.com. If you're a student at MMU, use [these instructions](https://github.com/AliceDigitalLabs/SupportingLiveProjects_2018/wiki/Additional-Tools-from-Github#omnidb) and set-up OmniBD on your H: drive. You can then use it on any CMDT PC.
 
-![omnidb](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/omnidb.png)
+![omnidb](./documentation/resources/omnidb.png)
 
 In the pic above, OmniDB is directly editing our remote Postgres database (which is something done with **great caution!**)
 
@@ -168,13 +176,13 @@ adanac:WildLoggingDB coops$ npm --v
 
 4. The NodeJS code is downloaded as a .zip file.
 
-5. Put zip file in the 'code' folder of the repo, unzip, and then discard the .zip file.
+5. Put zip file in the root folder of the repo, unzip, and then discard the .zip file.
 
-6. Your `/code` directory will have a directory in it called `nodejs-server`. Take the contents of this directory out and paste into the `code` directory.
+6. Your directory will have a directory in it called `nodejs-server`. Take the contents of this directory out and paste into the root directory.
 
-7. Add a .gitignore file ([here](https://github.com/github/gitignore/blob/master/Node.gitignore)) (don't forget to make sure the name of the file is actually `.gitignore`). to the `/code` directory.
+7. Add a .gitignore file ([here](https://github.com/github/gitignore/blob/master/Node.gitignore)) (don't forget to make sure the name of the file is actually `.gitignore`). to the root directory.
 
-8. Make sure you are connected to the internet. Open a terminal in the `/code` directory, and type
+8. Make sure you are connected to the internet. Open a terminal in the root directory, and type
 
 9. ```bash
    npm start
@@ -203,11 +211,13 @@ adanac:WildLoggingDB coops$ npm --v
 
 14. The swagger UI is available at `http://localhost:8080/docs`
 
-15. Once you're at this point, you can check in your changes.
+15. Try some of the functions. You find the swagger UI page sends an HTTP request to the service via the REST API, and gets some canned data back.
+
+16. Once you're at this point, you can check in your changes.
 
 ## Deploy to Heroku
 
-While we're here, it's a good idea to explore deployment to Heroku; the app is in its generated state, so there's nothing there to confuse if something goes wrong.
+While we're here, it's a good idea to explore deployment to Heroku; the app has only just been generated, so there's nothing there to confuse if something goes wrong.
 
 Heroku has a nice way of connecting your app to your GitHub repo, so you can build directly from it, whenever you want to, from whatever branch.
 
@@ -219,36 +229,28 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 4. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
 
-5. Choose 'connect to GitHub' to confirm. This happens:
+5. Choose 'connect to GitHub' again, to confirm. This happens:
 
 6. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
 
-7. Fill-in the GitHub details for the account owning your repo, and sign-in. This happens:
+7. Fill-in the GitHub details for the account owning your repo, and sign-in. This now happens:
 
 8. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
 
-9. The left hand chooser is populated with all the GitHub personas which your login can access. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access. 
+9. The left hand chooser is populated with all the GitHub personas which your login information give you access to can. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
 
-10. You need admin access on a repo to get premission to connect to it from the Heroku dashboard!
+10. You need admin access on a repo to grant permission for Heroku to connect to it.
 
-11. Now you can type in the name of your repo, and it will search to connect to it. 
+11. Type in the name of your repo, and it will search to connect to it: 
 
 12. ![heroku deploy 5](./documentation/resources/heroku_deploy_5.png)
 
-13. Connect to the correct repo! This happens:
+13. Choose 'Connect' on the correct repo. This happens:
 
 14. ![heroku deploy 6](./documentation/resources/heroku_deploy_6.png)
 
 15. The heroku dashboard is now waiting to deploy the contents of the 'master' branch of the GitHub repo.
 
-16. Deploying it, is as easy as pressing the button - except - Heroku needs to know what to build and where it is. Heroku's pretty smart; if the index.js of the NodeJS server was in the top level of the repo, it would have recognised it, and built without a problem. However, our source is in the `/code` directory. We just need to add a [file](https://devcenter.heroku.com/articles/getting-started-with-nodejs) to get it going. 
+16. Deploying it, is as easy as pressing the button - except - Heroku needs to know what to build and where it is. Heroku's pretty smart; if the index.js of the NodeJS server is in the top level of the repo, it will recognise it, and build without a problem. 
 
-17. In the root of the repo, create a file called `Procfile`
-
-18. Add the following to the `Profile`
-
-19. ```procfile
-    web: node ./code/index.js
-    ```
-
-20. Check the code in.
+17. Choose 'Deploy Branch'.
