@@ -182,15 +182,23 @@ adanac:WildLoggingDB coops$ npm --v
 
 7. Add a .gitignore file ([here](https://github.com/github/gitignore/blob/master/Node.gitignore)) (don't forget to make sure the name of the file is actually `.gitignore`). to the root directory.
 
-8. Make sure you are connected to the internet. Open a terminal in the root directory, and type
+8. Make a small change to the swagger.yaml file, in `<repo root>\api\swagger.yaml`. Make sure the following is set, near the top of the file:
 
-9. ```bash
-   npm start
+9. ```yaml
+   host: "localhost:8080"
+   schemes:
+   - "http"
    ```
 
-10. This is an instruction to the node package manager to download all the dependencies of the application, and then start Node:
+10. Make sure you are connected to the internet. Open a terminal in the root directory, and type
 
 11. ```bash
+    npm start
+    ```
+
+12. This is an instruction to the node package manager to download all the dependencies of the application, and then start Node:
+
+13. ```bash
     > theurbanwild@1.6.0 prestart /Users/coops/Documents/projects/WildLoggingDB/code
     > npm install
     
@@ -205,52 +213,94 @@ adanac:WildLoggingDB coops$ npm --v
     Swagger-ui is available on http://localhost:8080/docs
     ```
 
-12. The best thing about the swagger-generated services like this, is that they automatically come with a set of interactive docs (swagger-ui), which you can use to debug the service:
+14. The best thing about the swagger-generated services like this, is that they automatically come with a set of interactive docs (swagger-ui), which you can use to debug the service:
 
-13. ![swagger-ui](./documentation/resources/swagger_api_localhost.png)
+15. ![swagger-ui](./documentation/resources/swagger_api_localhost.png)
 
-14. The swagger UI is available at `http://localhost:8080/docs`
+16. The swagger UI is available at `http://localhost:8080/docs`
 
-15. Try some of the functions. You find the swagger UI page sends an HTTP request to the service via the REST API, and gets some canned data back.
+17. Try some of the functions. You find the swagger UI page sends an HTTP request to the service via the REST API, and gets some canned data back.
 
-16. Once you're at this point, you can check in your changes.
+18. Once you're at this point, you can check in your changes.
 
 ## Deploy to Heroku
 
 While we're here, it's a good idea to explore deployment to Heroku; the app has only just been generated, so there's nothing there to confuse if something goes wrong.
 
+Heroku is a fantastic resource - but there are a couple of things we need to do to the app to make it play nicely:
+
+1. Configure the app to listen on the HTTP port which Heroku gives it.
+2. Configure the Swagger UI to make calls to the deployed REST interface, not localhost.
+
+### Ports
+
+Heroku is a gigantic container service, running millions of services in a virtualised environment. To do this, it  gives each app an automatic domain name, <yourappname>.herokuapp.com, and port and routes all incoming traffic to your app, via that. 
+
+If it wants to get this traffic, our service must listen on that port. 
+
+Heroku provides the port in an environment variable. We need to read the value during the service's set-up,  and provide it to the skeleton server's framework.
+
+We'll need to modify the file `index.js` in the root of the repo:
+
+1. Find the following  line:
+
+   ```javascript
+   var serverPort = 8080;
+   ```
+
+2. Change it to:
+
+3. ```javascript
+   var serverPort = process.env.PORT || 8080
+   ```
+
+
+
+Now the app will listen on Heroku's port if it's defined, or if you're running the code locally, it will default to 8080.
+
+### Swagger UI
+
+The Swagger UI configures itself by obtaining, reading and parsing the `/apis/swagger.yaml` file, when it has deployed to the browser.
+
+The hostname and scheme values tell it where to send its HTTP requests to. 
+
+You will need to change the following values to match your own installation:
+
+```yaml
+host: "urbanwilddbapi.herokuapp.com"
+schemes:
+- "https"
+```
+
+1. To find your host value,  go to you Heroku account, and the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+
+### Deploying from GitHub
+
 Heroku has a nice way of connecting your app to your GitHub repo, so you can build directly from it, whenever you want to, from whatever branch.
 
-1. Login to your Heroku account, with your project identity, and go to the 'deploy' tab:
-
-2. ![heroku deploy 1](./documentation/resources/heroku_deploy_1.png)
-
-3. Choose 'connect to GitHub'. This happens:
-
-4. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
-
-5. Choose 'connect to GitHub' again, to confirm. This happens:
-
-6. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
-
-7. Fill-in the GitHub details for the account owning your repo, and sign-in. This now happens:
-
-8. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
-
-9. The left hand chooser is populated with all the GitHub personas which your login information give you access to can. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
-
-10. You need admin access on a repo to grant permission for Heroku to connect to it.
-
-11. Type in the name of your repo, and it will search to connect to it: 
-
-12. ![heroku deploy 5](./documentation/resources/heroku_deploy_5.png)
-
-13. Choose 'Connect' on the correct repo. This happens:
-
-14. ![heroku deploy 6](./documentation/resources/heroku_deploy_6.png)
-
-15. The heroku dashboard is now waiting to deploy the contents of the 'master' branch of the GitHub repo.
-
-16. Deploying it, is as easy as pressing the button - except - Heroku needs to know what to build and where it is. Heroku's pretty smart; if the index.js of the NodeJS server is in the top level of the repo, it will recognise it, and build without a problem. 
-
-17. Choose 'Deploy Branch'.
+1. **Make sure you have checked in your earlier changes!**
+2. Login to your Heroku account, with your project identity, and go to the 'deploy' tab:
+3. ![heroku deploy 1](./documentation/resources/heroku_deploy_1.png)
+4. Choose 'connect to GitHub'. This happens:
+5. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
+6. Choose 'connect to GitHub' again, to confirm. This happens:
+7. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
+8. Fill-in the GitHub details for the account owning your repo, and sign-in. This now happens:
+9. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
+10. The left hand chooser is populated with all the GitHub personas which your login information give you access to can. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
+11. You need admin access on a repo to grant permission for Heroku to connect to it.
+12. Type in the name of your repo, and it will search to connect to it: 
+13. ![heroku deploy 5](./documentation/resources/heroku_deploy_5.png)
+14. Choose 'Connect' on the correct repo. This happens:
+15. ![heroku deploy 6](./documentation/resources/heroku_deploy_6.png)
+16. The heroku dashboard is now waiting to deploy the contents of the 'master' branch of the GitHub repo.
+17. Deploying it, is as easy as pressing the button - except - Heroku needs to know what to build and where it is. Heroku's pretty smart; if the index.js of the NodeJS server is in the top level of the repo, it will recognise it, and build without a problem. 
+18. Choose 'Deploy Branch'. This happens:
+19. ![](./documentation/resources/heroku_deploy_7.png)
+20. Heroku receives the source code from the repo, recognises it as being a NodeJS project, and starts building.
+21. When it's done, this happens: 
+22. ![](./documentation/resources/heroku_deploy_8.png)
+23. The app has deployed, and is available to View. 
+24. However, choosing the 'View' button won't take you to the Swagger doc. It gets deployed to <yourwebsite url>/docs
+25. To find your websit URL, go to the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+26. Our swagger URL is https://urbanwilddbapi.herokuapp.com/docs
