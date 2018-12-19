@@ -79,7 +79,7 @@ Now we have the definition of the interface, to use in this project. Note: RESTl
 
 
 
-   ![here](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/restlet_api_def.png)
+   ![here](./documentation/resources/restlet_api_def.png)
 
 
 All is nicely laid-out, with end points for resources, verbs for the http operations, and defintions for the data which will be handled. 
@@ -92,7 +92,7 @@ Swagger.io originally developed the Open API Specification. We like to use its [
 
 1. We used the [online version](https://editor.swagger.io/) of the Swagger Editor to visualise [our]([here](https://github.com/TheUrbanWild/WildLoggingDB/blob/master/documentation/restlet/swagger.yaml) ) REST Interface definition.
 
-   ![swagger](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/swagger_api_def.png)
+   ![swagger](./documentation/resources/swagger_api_def.png)
 
 The Swagger editor is much more code-orientated than Restlet Studio, which allows us to see much better how the interface is constructed - in [YAML](https://yaml.org/)
 
@@ -104,7 +104,7 @@ The reason we like it so much, is that we remember how hard it used to be to dep
 
 Security is a huge concern for anything that we do and to have such a trustable product at our disposal, essentially for free is a real benefit.
 
-![heroku](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku.png)
+![heroku](./documentation/resources/heroku.png)
 
  Here's how we start-up our project with Heroku, and add a Postgres DB:
 
@@ -199,7 +199,7 @@ adanac:WildLoggingDB coops$ npm --v
 
 12. The best thing about the swagger-generated services like this, is that they automatically come with a set of interactive docs (swagger-ui), which you can use to debug the service:
 
-13. ![swagger-ui](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/swagger_api_localhost.png)
+13. ![swagger-ui](./documentation/resources/swagger_api_localhost.png)
 
 14. The swagger UI is available at `http://localhost:8080/docs`
 
@@ -213,19 +213,19 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 1. Login to your Heroku account, with your project identity, and go to the 'deploy' tab:
 
-2. ![heroku deploy 1](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_1.png)
+2. ![heroku deploy 1](./documentation/resources/heroku_deploy_1.png)
 
 3. Choose 'connect to GitHub'. This happens:
 
-4. ![heroku deploy 2](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_2.png)
+4. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
 
 5. Choose 'connect to GitHub' to confirm. This happens:
 
-6. ![heroku deploy 3](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_3.png)
+6. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
 
 7. Fill-in the GitHub details for the account owning your repo, and sign-in. This happens:
 
-8. ![heroku deploy 4](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_4.png)
+8. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
 
 9. The left hand chooser is populated with all the GitHub personas which your login can access. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access. 
 
@@ -233,11 +233,11 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 11. Now you can type in the name of your repo, and it will search to connect to it. 
 
-12. ![heroku deploy 5](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_5.png)
+12. ![heroku deploy 5](./documentation/resources/heroku_deploy_5.png)
 
 13. Connect to the correct repo! This happens:
 
-14. ![heroku deploy 6](/Users/coops/Documents/projects/WildLoggingDB/documentation/resources/heroku_deploy_6.png)
+14. ![heroku deploy 6](./documentation/resources/heroku_deploy_6.png)
 
 15. The heroku dashboard is now waiting to deploy the contents of the 'master' branch of the GitHub repo.
 
