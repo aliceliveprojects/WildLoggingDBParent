@@ -25,6 +25,7 @@ Follow along:  it's a good way to experience all the tools and processes, while 
 
 ### Set up identity, tools and services
 
+1. Install VSCode
 1. Create a project identity
 1. Create a new, fresh GitHub repo. Clone it locally
 1. Create a Restlet Account 
@@ -59,6 +60,9 @@ Follow along:  it's a good way to experience all the tools and processes, while 
 2. Change the location which the Urban Wild SPWA points to. Same interface, different location!
 
 # Here we go
+
+## Install VSCode
+Microsoft Visual Studio Code is a ridiculously useful code editor, which comes with a debugger, compatible with NodeJS (amongst other things). It supports Windows, Linux and MacOS. You can install it [here](https://code.visualstudio.com/).
 
 ## Setting up a Project Identity
 
@@ -120,7 +124,7 @@ Security is a huge concern for anything that we do and to have such a trustable 
 2. We used Heroku to create an app, using the European jurisdiction. (We called ours urbanwilddbapi
 3. In Heroku, we used the 'Elements' menu item to add a free Heroku Postgres instance. (Hobby Dev)
 4. In the app's Settings, the 'Reveal Config Vars' button shows we have a DATABASE_URL
-5. The DATABASE_URL is a Postgres URL which points to the Postgres dabase instance on Amazon's AWS infrastructure.
+5. The DATABASE_URL is a [Postgres URL](https://stackoverflow.com/questions/3582552/postgresql-connection-url) which points to the Postgres dabase instance on Amazon's AWS infrastructure.
 6. The DATABASE URL is private, and should never be checked into a public repository, or allowed outside the project.
 7. Heroku has a number of tools which can be used to create local instances of the Database - but for this exercise, we will just use the remote DB.
 
@@ -370,5 +374,460 @@ A [UUID](https://www.uuidgenerator.net/version4) is a [Universally Unique Identi
 
 First things first, we need to set up our database to use them.
 
-1. Make sure you have installed Omni DB, and logged into your database
+1. Make sure you have installed Omni DB, and logged into your database. Remember that the DATABASE_URL in the  Config Vars of your Heroku Account contains [all the information you need](https://stackoverflow.com/questions/3582552/postgresql-connection-url).
+
+2. You'll need to send the following Query to your database, to enable uuid functionality, provided by an extension, called `uuid-ossp`:
+
+3. ```sql
+   CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+   ```
+
+
+
+### Tables
+
+#### Things
+
+Create the 'Things' table, by sending the following query:
+
+```sql
+CREATE TABLE "public"."things" (
+    "id" text DEFAULT uuid_generate_v4(),
+    "name" text NOT NULL,
+    PRIMARY KEY ("id")
+);
+```
+
+#### Events
+
+Create the 'Events' table, by sending the following query:
+
+```sql
+CREATE TABLE "public"."events" (
+    "id" text DEFAULT uuid_generate_v4(),
+    "postcode" text NOT NULL,
+    "lat" double precision NOT NULL,
+    "lon" double precision NOT NULL,
+    "date" bigint NOT NULL,
+    "thing" text,
+    PRIMARY KEY ("id"),
+    FOREIGN KEY ("thing") REFERENCES "public"."Things"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+### Test the Database
+
+#### Things
+
+Create a new Thing in the database, by sending the following query:
+
+```sql
+INSERT INTO "public"."things"("name") VALUES('Jay') RETURNING "id", "name";
+```
+
+You'll find that the database returns you an automatic UUID, for 'Jay'.
+
+In this case the thing has a UUID of `5b911588-ce37-4356-96ae-d79e5b6aca88`. Yours will (obviously) be different.
+
+#### Events
+
+Things get a bit complicated here, but it's worth it!
+
+We're going to add an event, at our current latitude and longitude, the current date, expressed as a Java epoch time (number of seconds since 00:00:00 01/01/1970), and the current post code.
+
+##### Lat Long
+
+We're using the location of MUU's Shed, in https://www.latlong.net/
+
+Which we get as something like: 
+
+```
+Lat:  54.570499
+Lon: -5.930030
+```
+
+##### Postcode
+We'll look these up on https://postcodes.io/ and check they are valid.
+
+##### Date
+We'll use https://www.epochconverter.com/ to convert the current time into a long integer. This returns us something like: 
+
+```1546180701```
+
+##### Add the entry
+
+Putting it all together gives us this query to send:
+
+```sql
+INSERT INTO "public"."events"("postcode", "lat", "lon", "date", "thing") VALUES('M1 5GD', 54.570499, -5.93003, 1546180701, '5b911588-ce37-4356-96ae-d79e5b6aca88') RETURNING "id", "postcode", "lat", "lon", "date", "thing";
+
+```
+
+(don't forget to substitute your own thing id if you're following along)
+
+**Add several entries, so that you're able to test searching and sorting, when you need to**
+
+## Bind server to database
+
+Now we're ready to connect our Node.JS server to the database.
+
+### Add node-postgres
+
+You will need to install the [node-postgres](https://node-postgres.com/) package to your application.
+
+1. Open a command prompt / terminal window in the root directory of your project. This is the directory which has the `package.json` file in it.
+
+2. Type:
+
+3. ```bash
+   npm install pg
+   ```
+
+
+
+### Add Structure
+
+We're going to add to the structure of our application , to make it clear that the database functionality is seperate to the server skeleton. 
+
+We're also going to add some utility functions which make it easier to respond to error messages when things go awry.
+
+Finally, we're going to hook-up the swagger-generated code to our database functionality, and give it a test, to see it all works properly.
+
+Add the following files (shown in green) to your project:
+
+![vscode_1](./documentation/resources/vscode_1.png)
+
+#### stall.js
+
+One of the best things to come out of NodeJS v8 was the implicit use of Promises in the language, with the keywords `async` and `await` , which encapsulate the concept of asynchronous code - code which runs independently of the main thread.
+
+The swagger-generated code supports pre-Node 8, and so uses the legacy  Promise class. We want to be able to use the swagger code with the minimum of alteration, so we won't mess about with it too much. However, we want to use the latest additions in any new code we write, so that we take advantage of its readability.
+
+Stall.js simply allows us to create a dummy asynchronous function, which resolves (runs) after a specified time, and lets us test our services.
+
+Here's stall.js:
+
+```javascript
+'use strict'
+
+async function stall(stallTime = 3000, throwable = null) {
+    if(!throwable){
+    	await new Promise(resolve => setTimeout(
+        function(){
+            console.log("dummy async function resolving in" + stallTime + " ms.");
+            setTimeout(resolve,stallTime);
+        }
+        , 0));
+    }else{
+        await new Promise(resolve => setTimeout(resolve, stallTime));
+        throw(throwable);
+    }
+}
+
+module.exports = {
+    stall: stall
+};
+```
+
+
+
+You can see it simply sets up an old-style timeout. We can set `throwable` with an object which reports an error, too.
+
+#### error.js
+
+This simply gives us some more-readable helper functions, to create error objects, which can be thrown.
+
+Here's error.js:
+
+```javascript
+'use strict'
+
+module.exports = {
+
+    createError: (code, message) => {
+        var result = {};
+        result.statusCode = code;
+        result.message = message;
+        return result;  
+    },
+
+    create500Error: (message) => {
+        var result = {};
+        result.statusCode = 500;
+        result.message = message;
+        return result;
+    },
+    create400Error:(message) => {
+        var result ={};
+        result.statusCode = 400;
+        result.message = "Bad Request: " + message;
+        return result;
+    },
+
+    createNotYetImplemented: (message) => {
+        var result = {};
+        result.statusCode = 500;
+        result.message = "Not yet implemented: " + message;
+        return result;
+    }
+
+}
+```
+
+
+
+#### database.js
+
+This file is going to provide us with the implement of the REST interface, at the database level. 
+
+At the moment, we're just going to add all the required dependencies, and test it, using  'stall' to represent an asynchronous call into the DB.
+
+Here's what database.js looks like right now:
+
+```javascript
+'use strict';
+
+var { Pool } = require('pg');
+
+var createError = require('../utils/error').createError;
+var stall = require('../utils/stall').stall;
+
+var thePool = null;
+var theConfig = null;
+
+
+const errors = {
+  PARAMETER_ERROR:-1,
+  DATABASE_ERROR:-2,
+  INTERNAL_ERROR:-3
+}
+
+var initialise = function (url, needsSSL) {
+    if (needsSSL == true) {
+      url += "?sslmode=require"
+    }
+  
+    if (thePool) {
+      thePool.end();
+    };
+  
+    theConfig = null;
+  
+    theConfig = {
+      connectionString: url,
+      ssl: needsSSL
+    };
+  
+    thePool = new Pool(theConfig);
+  };
+  
+
+
+  var test = async function(arg){
+
+    await stall(500, createError(errors.PARAMETER_ERROR,"bad parameter!"));
+    
+  }
+
+
+var getEvents = async function(id, date, lat, lon, postcode, thing, $page, $size, $sort){
+  var result = null;
+  await test(); // this will throw;
+  return result;
+}
+
+
+  module.exports = {
+    errors:errors,
+    initialise: initialise,
+    getEvents:getEvents
+  };
+```
+
+
+
+You'll see we export:
+
+* initialise: initialises the database connection and a pool of clients.
+* errors: an object which defines all errors which are supported
+* test: function to do a dummy async call
+
+#### Changes to swagger-generated skeleton code
+
+##### WildlifelogService.js
+
+We're going to change the function `getEvents` in this file. Here's the new version:
+
+```javascript
+exports.getEvents = function($page,lat,lon,date,id,$size,postcode,thing,$sort) {
+  
+   return new Promise(function(resolve, reject) {
+         database.getEvents(id, date, lat, lon, postcode, thing, $page, $size, $sort)
+         .then(resolve)
+         .catch(function(e){
+            switch(e.statusCode){
+              case database.errors.DATABASE_ERROR:
+              // remove database specific error - will leak information.
+              reject (errApi.create500Error("something terrible happened with the database. Sorry..."));
+              break;
+              case database.errors.INTERNAL_ERROR:
+              reject(errApi.create500Error(e.message));
+              break;
+              case database.errors.PARAMETER_ERROR:
+              reject(errApi.create400Error(e.message));
+              break;
+            }
+         })
+   });
+}
+```
+
+we're calling the `database.getEvents` function, here, as it would be called, but we've put some extra code in, to handle errors. One thing we want to handle properly is the way sql errors are reported. We're clobbering those and removing the detail.
+
+
+
+##### Wildlifelog.js
+
+We're going to change the function `getEvents` in this file. This introduces a small change, so that we can report the error code properly, if one is thrown:
+
+```javascript
+module.exports.getEvents =  function getEvents (req, res, next) {
+  var $page = req.swagger.params['$page'].value;
+  var lat = req.swagger.params['lat'].value;
+  var lon = req.swagger.params['lon'].value;
+  var date = req.swagger.params['date'].value;
+  var id = req.swagger.params['id'].value;
+  var $size = req.swagger.params['$size'].value;
+  var postcode = req.swagger.params['postcode'].value;
+  var thing = req.swagger.params['thing'].value;
+  var $sort = req.swagger.params['$sort'].value;
+
+  
+  var response =  Wildlifelog.getEvents($page,lat,lon,date,id,$size,postcode,thing,$sort)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, utils.respondWithCode(response.statusCode, response));
+    });
+
+};
+```
+
+
+
+We're calling `respondWithCode`, which gives us that status code.
+
+##### Index.js
+
+Finally, we're going to initialise the database service in the index.js:
+
+```javascript
+'use strict';
+
+var fs = require('fs'),
+path = require('path'),
+http = require('http');
+
+
+
+var app = require('connect')();
+var swaggerTools = require('swagger-tools');
+var jsyaml = require('js-yaml');
+
+var serverPort = process.env.PORT || 8080;
+
+var database = require('./service/database');
+var dbUrl = process.env.DATABASE_URL;
+
+// database connection
+database.initialise(dbUrl, true);
+
+// swaggerRouter configuration
+var options = {
+  swaggerUi: path.join(__dirname, '/swagger.json'),
+  controllers: path.join(__dirname, './controllers'),
+  useStubs: process.env.NODE_ENV === 'development' // Conditionally turn on stubs (mock mode)
+};
+
+// The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
+var spec = fs.readFileSync(path.join(__dirname,'api/swagger.yaml'), 'utf8');
+var swaggerDoc = jsyaml.safeLoad(spec);
+
+// Initialize the Swagger middleware
+swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
+
+  // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
+  app.use(middleware.swaggerMetadata());
+
+  // Validate Swagger requests
+  app.use(middleware.swaggerValidator());
+
+  // Route validated requests to appropriate controller
+  app.use(middleware.swaggerRouter(options));
+
+  // Serve the Swagger documents and Swagger UI
+  app.use(middleware.swaggerUi());
+
+  // Start the server
+  http.createServer(app).listen(serverPort, function () {
+    console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
+    console.log('Swagger-ui is available on http://localhost:%d/docs', serverPort);
+  });
+
+});
+
+```
+
+
+
+The lines we've added are:
+
+```javascript
+var database = require('./service/database');
+var dbUrl = process.env.DATABASE_URL;
+
+// database connection
+database.initialise(dbUrl, true);
+```
+
+#### Testing
+
+One of the nicest things about VisualStudio Code, is that it supports debugging NodeJS right out of the box.
+
+It will even support setting up the environment variables which Node will access from Heroku, when deployed. 
+
+You can set up debugging, by creating a  `.vscode` directory in your project's root directory, and adding a `launch.json` file:
+
+```json
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/index.js",
+            "env": {
+                "DATABASE_URL":"postgres://fljsdlfjsdsdfdssd:lalalalalalalalalalalalalalalalalalalalalala@ec2-99-999-99-999.eu-west-1.compute.amazonaws.com:5432/kgerwkgergergreger"
+            }
+        }
+    ]
+}
+```
+
+
+
+You'll notice we added the DATABASE_URL, so we can debug the server locally, while using the main db.
+
+*  **DO NOT check-in the launch.json file**. It now contains the login details to your database.
+
+Once you have created the file you should be able to set breakpoints in the server code. You should be able  to run the server locally, and test your new code using the Swagger UI at:
+
+`http://localhost:8080/docs/#!/wildlifelog/getEvents`
+
+
 
