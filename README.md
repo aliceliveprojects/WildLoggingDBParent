@@ -134,6 +134,8 @@ This is a browser-based client. A web-based version is here: http://teampostgres
 
 In the pic above, OmniDB is directly editing our remote Postgres database (which is something done with **great caution!**)
 
+
+
 That's the tools. Let's have a look at the API definition.
 
 ## API definition
@@ -260,9 +262,9 @@ Now the app will listen on Heroku's port if it's defined, or if you're running t
 
 ### Swagger UI
 
-The Swagger UI configures itself by obtaining, reading and parsing the `/apis/swagger.yaml` file, when it has deployed to the browser.
+The Swagger UI configures itself by reading and parsing the `/apis/swagger.yaml` file, when it has deployed to the browser.
 
-The hostname and scheme values tell it where to send its HTTP requests to. 
+The hostname and scheme values tell it where the REST service is and where to send its HTTP requests to. 
 
 You will need to change the following values to match your own installation:
 
@@ -272,7 +274,7 @@ schemes:
 - "https"
 ```
 
-1. To find your host value,  go to you Heroku account, and the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+1. To find your host value,  go to your Heroku account, and the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
 
 ### Deploying from GitHub
 
@@ -332,22 +334,41 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 27. **If you have problems:** we had a lot of problems contacting our server, until we realised that our `eduroam` internet provision was blocking comms to it. MMU does provide a BTWifi connection, which is open, and can be used by visitors, so we reccommend using that for testing.
 
+## Setup the Postgres Database
 
-## Setup the Database
+The Restlet Service we are re-creating has 2 data types. You can see the types, by looking at the `POST` verbs for the `events` endpoint and the `things`endpoint:
 
-In this section, we're going to set-up the database to mimic the way our RESTlet API has been behaving.
+### Thing
 
-The RESTlet database is very simple: It has a table of `Things` and a table of `Events` . 
+```json
+Thing {
+	name (string)
+}
+```
 
-Each row in the the `Things` table simply has an id, and a name
 
-Each row in the `Events` table has an id, and data to locate the event in time and space:
 
-**Space**: postcode, lat, lon
+### Event
 
-**Time:** timestamp
+```json
+Event {
+	postcode (string),
+	date (integer),
+	thing (string),
+	lat (number),
+	lon (number)
+}
+```
+
+The Postgres database must model these, using tables.
+
+We'll do this, using 3 tables: a `Things` table, an `Events` table, and a `ThingsEvents` table. This last table joins joins events to things, so we can look up all sighting events of a particular thing.
 
 ### UUIDs
 
-The UUIDs 
+A [UUID](https://www.uuidgenerator.net/version4) is a [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier). We use UUIDs to index each row in a table. 
+
+First things first, we need to set up our database to use them.
+
+1. Make sure you have installed Omni DB, and logged into your database
 
