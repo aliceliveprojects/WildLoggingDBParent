@@ -134,6 +134,8 @@ This is a browser-based client. A web-based version is here: http://teampostgres
 
 In the pic above, OmniDB is directly editing our remote Postgres database (which is something done with **great caution!**)
 
+
+
 That's the tools. Let's have a look at the API definition.
 
 ## API definition
@@ -260,9 +262,9 @@ Now the app will listen on Heroku's port if it's defined, or if you're running t
 
 ### Swagger UI
 
-The Swagger UI configures itself by obtaining, reading and parsing the `/apis/swagger.yaml` file, when it has deployed to the browser.
+The Swagger UI configures itself by reading and parsing the `/apis/swagger.yaml` file, when it has deployed to the browser.
 
-The hostname and scheme values tell it where to send its HTTP requests to. 
+The hostname and scheme values tell it where the REST service is and where to send its HTTP requests to. 
 
 You will need to change the following values to match your own installation:
 
@@ -272,35 +274,103 @@ schemes:
 - "https"
 ```
 
-1. To find your host value,  go to you Heroku account, and the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+1. To find your host value,  go to your Heroku account, and the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
 
 ### Deploying from GitHub
 
 Heroku has a nice way of connecting your app to your GitHub repo, so you can build directly from it, whenever you want to, from whatever branch.
 
 1. **Make sure you have checked in your earlier changes!**
+
 2. Login to your Heroku account, with your project identity, and go to the 'deploy' tab:
+
 3. ![heroku deploy 1](./documentation/resources/heroku_deploy_1.png)
+
 4. Choose 'connect to GitHub'. This happens:
+
 5. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
+
 6. Choose 'connect to GitHub' again, to confirm. This happens:
+
 7. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
+
 8. Fill-in the GitHub details for the account owning your repo, and sign-in. This now happens:
+
 9. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
+
 10. The left hand chooser is populated with all the GitHub personas which your login information give you access to can. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
+
 11. You need admin access on a repo to grant permission for Heroku to connect to it.
+
 12. Type in the name of your repo, and it will search to connect to it: 
+
 13. ![heroku deploy 5](./documentation/resources/heroku_deploy_5.png)
+
 14. Choose 'Connect' on the correct repo. This happens:
+
 15. ![heroku deploy 6](./documentation/resources/heroku_deploy_6.png)
+
 16. The heroku dashboard is now waiting to deploy the contents of the 'master' branch of the GitHub repo.
+
 17. Deploying it, is as easy as pressing the button - except - Heroku needs to know what to build and where it is. Heroku's pretty smart; if the index.js of the NodeJS server is in the top level of the repo, it will recognise it, and build without a problem. 
+
 18. Choose 'Deploy Branch'. This happens:
+
 19. ![](./documentation/resources/heroku_deploy_7.png)
+
 20. Heroku receives the source code from the repo, recognises it as being a NodeJS project, and starts building.
+
 21. When it's done, this happens: 
+
 22. ![](./documentation/resources/heroku_deploy_8.png)
+
 23. The app has deployed, and is available to View. 
+
 24. However, choosing the 'View' button won't take you to the Swagger doc. It gets deployed to <yourwebsite url>/docs
-25. To find your websit URL, go to the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+
+25. To find your website URL, go to the 'settings' tab. You'll see it in the 'Domains and Certificates' section.
+
 26. Our swagger URL is https://urbanwilddbapi.herokuapp.com/docs
+
+27. Your Heroku app is now ready to re-deploy with any changes you make locally. Just check-in your changes to GitHub, and use the 'Deploy Branch' button again.
+
+## Setup the Postgres Database
+
+The Restlet Service we are re-creating has 2 data types. You can see the types, by looking at the `POST` verbs for the `events` endpoint and the `things`endpoint:
+
+### Thing
+
+```json
+Thing {
+	name (string)
+}
+```
+
+
+
+### Event
+
+```json
+Event {
+	postcode (string),
+	date (integer),
+	thing (string),
+	lat (number),
+	lon (number)
+}
+```
+
+The Postgres database must model these, using tables.
+
+We'll do this, using 3 tables: a `Things` table, an `Events` table, and a `ThingsEvents` table. This last table joins joins events to things, so we can look up all sighting events of a particular thing.
+
+### UUIDs
+
+A [UUID](https://www.uuidgenerator.net/version4) is a [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier). We use UUIDs to index each row in a table. 
+
+First things first, we need to set up our database to use them.
+
+1. Make sure you have installed Omni DB, and logged into your database
+
+
+
