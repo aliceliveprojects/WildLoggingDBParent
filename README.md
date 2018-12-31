@@ -394,7 +394,8 @@ Create the 'Things' table, by sending the following query:
 CREATE TABLE "public"."things" (
     "id" text DEFAULT uuid_generate_v4(),
     "name" text NOT NULL,
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("id"),
+    UNIQUE (name)
 );
 ```
 
