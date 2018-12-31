@@ -304,7 +304,7 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 9. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
 
-10. The left hand chooser is populated with all the GitHub personas which your login information give you access to can. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
+10. The left hand chooser is populated with all the GitHub personas which your login information gives you access to. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
 
 11. You need admin access on a repo to grant permission for Heroku to connect to it.
 
@@ -368,11 +368,11 @@ Event {
 
 The Postgres database must model these, using tables.
 
-We'll do this, using 3 tables: a `Things` table, an `Events` table, and a `ThingsEvents` table. This last table joins joins events to things, so we can look up all sighting events of a particular thing.
+We'll do this, using 2 tables: a `Things` table, an `Events` table, Just as it was in the RESTlet storage.
 
 ### UUIDs
 
-A [UUID](https://www.uuidgenerator.net/version4) is a [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier). We use UUIDs to index each row in a table. 
+A [UUID](https://www.uuidgenerator.net/version4) is a [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier). We use UUIDs to index each row in a table, in an `id` column. 
 
 First things first, we need to set up our database to use them.
 
@@ -430,7 +430,7 @@ INSERT INTO "public"."things"("name") VALUES('Jay') RETURNING "id", "name";
 
 You'll find that the database returns you an automatic UUID, for 'Jay'.
 
-In this case the thing has a UUID of `5b911588-ce37-4356-96ae-d79e5b6aca88`. Yours will (obviously) be different.
+In this case the thing has a UUID of `5b911588-ce37-4356-96ae-d79e5b6aca88`. Yours will (obviously!) be different.
 
 #### Events
 
@@ -476,9 +476,11 @@ Now we're ready to connect our Node.JS server to the database.
 
 ### Add node-postgres
 
-You will need to install the [node-postgres](https://node-postgres.com/) package to your application.
+You'll remember that we have a NodeJS skeleton, whichwe generated from the REST interface definition, using the swagger tools.
 
-1. Open a command prompt / terminal window in the root directory of your project. This is the directory which has the `package.json` file in it.
+You will need to install the [node-postgres](https://node-postgres.com/) package to this application.
+
+1. Open a command prompt / terminal window in the root directory of the project. This is the directory which has the `package.json` file in it.
 
 2. Type:
 
@@ -504,7 +506,7 @@ Add the following files (shown in green) to your project:
 
 One of the best things to come out of NodeJS v8 was the implicit use of Promises in the language, with the keywords `async` and `await` , which encapsulate the concept of asynchronous code - code which runs independently of the main thread.
 
-The swagger-generated code supports pre-Node 8, and so uses the legacy  Promise class. We want to be able to use the swagger code with the minimum of alteration, so we won't mess about with it too much. However, we want to use the latest additions in any new code we write, so that we take advantage of its readability.
+The swagger-generated skeleton supports pre-Node 8, and so uses the legacy  Promise class. We want to be able to use the swagger code with the minimum of alteration, so we won't mess about with it too much. However, we want to use the latest language additions in any new code we write, so that we take advantage of the enhanced readability.
 
 Stall.js simply allows us to create a dummy asynchronous function, which resolves (runs) after a specified time, and lets us test our services.
 
@@ -585,7 +587,7 @@ This file is going to provide us with the implement of the REST interface, at th
 
 At the moment, we're just going to add all the required dependencies, and test it, using  'stall' to represent an asynchronous call into the DB.
 
-Here's what database.js looks like right now:
+Add this to the new  `database.js` file:
 
 ```javascript
 'use strict';
@@ -653,7 +655,7 @@ You'll see we export:
 
 * initialise: initialises the database connection and a pool of clients.
 * errors: an object which defines all errors which are supported
-* getEvents: function to do a database search - right now it's running  a dummy test function
+* getEvents: function to do a database search - right now it's running  the dummy test function
 
 #### Changes to swagger-generated skeleton code
 
@@ -687,11 +689,9 @@ exports.getEvents = function($page,lat,lon,date,id,$size,postcode,thing,$sort) {
 
 we're calling the `database.getEvents` function, here, as it would be called, but we've put some extra code in, to handle errors. One thing we want to handle properly is the way sql errors are reported. We're clobbering those and removing the detail.
 
-
-
 ##### Wildlifelog.js
 
-We're going to change the function `getEvents` in this file. This introduces a small change, so that we can report the error code properly, if one is thrown:
+We're going to change the function `getEvents` in this file:
 
 ```javascript
 module.exports.getEvents =  function getEvents (req, res, next) {
@@ -928,18 +928,23 @@ We're going to point the Single Page Web App at the new REST API, and hope that 
 
 1. Find the orginal SPWA [here](https://github.com/TheUrbanWild/WildLogging)
 2. We're going to fork it, so that it is a seperate entity, which can be run side-by-side, to the original. You can find the forked SPWA [here](https://github.com/aliceliveprojects/WildLogging)
+3. We changed all references to the RESTlet API, and replace them with our new one.
+
+## Testing with the SPWA
+
+While testing, the following changes needed to be made to the REST service, so it worked as expected by the SPWA:
 
 ### CORS
 
-We needed to add Cross Origin Request Support:
+We needed to add Cross Origin Request Support
 
-1. on the command-line / terminal at the root of the project:
+1. on the command-line / terminal at the root of the REST service project:
 
 2. ```bash
    npm install cors
    ```
 
-3. then the following code gets added to index.js
+3. then the following code gets added to `index.js`
 
 4. ```javascript
    var cors = require('cors');
@@ -956,11 +961,11 @@ We needed to add Cross Origin Request Support:
 
 ### Database Response
 
-We found that the SPWA was barfing, when trying to access events. The reason was because the API was returning the event.date as a string, and not a number.
+We found that the SPWA was barfing, when trying to access events. The reason was because the REST service was returning the event.date as a string, and not a number.
 
-To resolve this, we used a neat configuration function in node-postgres, to the setup of our `database.js`
+To resolve this, we used a neat configuration function in `node-postgres`, in the setup of our `database.js`
 
-1. Add this to the top of `database.js`
+1. We added this to the top of `database.js`
 
 2. ```javascript
    var types = require('pg').types;
@@ -976,7 +981,7 @@ To resolve this, we used a neat configuration function in node-postgres, to the 
 
 ### Get the return type right
 
-Finally, we noticed that the SPWA was not giving us the species name associated with the event - itwas because we were returning an array of 1 item, instead of the object itself.
+Finally, we noticed that the SPWA was not giving us the species name associated with the event - it was because we were returning an array of 1 item, instead of the object itself.
 
 ## Final Release
 
