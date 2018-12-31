@@ -1,5 +1,7 @@
-# WildLoggingDB - INCOMPLETE. NOT FOR PUBLIC USE (YET!)
+# WildLoggingDB - Re-implementing an API
 UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. You can find it [here](https://github.com/TheUrbanWild/WildLogging).
+
+We use the RESTlet platform to provide us with very fast (Free) way of prototyping data APIs - in this case, we logged species and sightings.
 
 After a merger, Restlet has changed its service terms. We need to remove our dependency on this service.
 
@@ -926,4 +928,64 @@ We're going to point the Single Page Web App at the new REST API, and hope that 
 
 1. Find the orginal SPWA [here](https://github.com/TheUrbanWild/WildLogging)
 2. We're going to fork it, so that it is a seperate entity, which can be run side-by-side, to the original. You can find the forked SPWA [here](https://github.com/aliceliveprojects/WildLogging)
+
+### CORS
+
+We needed to add Cross Origin Request Support:
+
+1. on the command-line / terminal at the root of the project:
+
+2. ```bash
+   npm install cors
+   ```
+
+3. then the following code gets added to index.js
+
+4. ```javascript
+   var cors = require('cors');
+   ```
+
+5. ...and:
+
+6. ```javascript
+   // Cross Origin Requests - must have this, as we are an API.
+   // Without it, browsers running SPWAs from domains different to ours (e.g. github pages)
+   // will reject HTTP requests during pre-flight check.
+   app.use(cors());
+   ```
+
+### Database Response
+
+We found that the SPWA was barfing, when trying to access events. The reason was because the API was returning the event.date as a string, and not a number.
+
+To resolve this, we used a neat configuration function in node-postgres, to the setup of our `database.js`
+
+1. Add this to the top of `database.js`
+
+2. ```javascript
+   var types = require('pg').types;
+   
+   // see https://github.com/brianc/node-pg-types#pg-types
+   // pg is returning our bigint date type as a string instead of a number.
+   types.setTypeParser(20, function(val) {
+     return parseInt(val);
+   });
+   ```
+
+3. see https://github.com/brianc/node-pg-types#pg-types for more information.
+
+### Get the return type right
+
+Finally, we noticed that the SPWA was not giving us the species name associated with the event - itwas because we were returning an array of 1 item, instead of the object itself.
+
+## Final Release
+
+Our final release marks the API working with the SPWA:
+
+* This release tag on the WildLoggingDB repo: [spwa_supported](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported)
+* This release tag on the WildLogging SPWA repo: [spwa_supported](https://github.com/aliceliveprojects/WildLogging/releases/tag/spwa_supported)
+
+You can find the final release [here](https://aliceliveprojects.github.io/WildLogging/#/home):
+
+![final](./documentation/resources/final_release.png)
 
