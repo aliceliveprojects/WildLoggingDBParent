@@ -913,3 +913,17 @@ It's a quick and dirty implementation, to illustrate the creation of the dynamic
 
 We're going to do the same sort of thing to implement all the other REST endpoints. 
 
+We now have 2 releases, which are tagged in the source code:
+
+1. [one_endpoint_supported](https://github.com/TheUrbanWild/WildLoggingDB/releases/tag/one_endpoint_supported)
+
+2. [all_endpoints_supported](https://github.com/TheUrbanWild/WildLoggingDB/releases/tag/all_endpoints_supported)
+
+
+## Change the SPWA
+
+We're going to point the Single Page Web App at the new REST API, and hope that it behaves itsself :-)
+
+1. Find the orginal SPWA [here](https://github.com/TheUrbanWild/WildLogging)
+2. We're going to fork it, so that it is a seperate entity, which can be run side-by-side, to the original. You can find the forked SPWA [here](https://github.com/aliceliveprojects/WildLogging)
+
