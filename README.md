@@ -650,7 +650,7 @@ You'll see we export:
 
 * initialise: initialises the database connection and a pool of clients.
 * errors: an object which defines all errors which are supported
-* test: function to do a dummy async call
+* getEvents: function to do a database search - right now it's running  a dummy test function
 
 #### Changes to swagger-generated skeleton code
 
@@ -825,9 +825,89 @@ You'll notice we added the DATABASE_URL, so we can debug the server locally, whi
 
 *  **DO NOT check-in the launch.json file**. It now contains the login details to your database.
 
-Once you have created the file you should be able to set breakpoints in the server code. You should be able  to run the server locally, and test your new code using the Swagger UI at:
+Once you have created the file you should be able to set breakpoints in the server code. You should be able  to run the server locally, from VSCode and test your new code using the Swagger UI at:
 
 `http://localhost:8080/docs/#!/wildlifelog/getEvents`
 
 
+
+## Hook up the database
+
+Now we're going to create a query which will perform a search of the database. 
+
+We've made a change to the `database.js` file's `getEvents` function:
+
+```javascript
+var getEvents = async function(id, date, lat, lon, postcode, thing, $page, $size, $sort){
+  var result = null;
+
+  var stem = 'select * from events where';
+  var id_comp = '($1::text is null or id = $1) and ';
+  var date_comp = '($2::bigint is null or date = $2) and ';
+  var lat_comp = '($3::real is null or lat = $3) and '; // practically useless. Included for completeness
+  var lon_comp = '($4::real is null or lon = $4) and '; // practically useless. Included for completeness
+  var postcode_comp = "($5::text is null or postcode like $5) and ";
+  var thing_comp = '($6::text is null or thing = $6) ';
+  
+
+  var page = 0;
+  var size = 0;
+  var sort = "";
+
+  if(postcode){
+    postcode = "%" + postcode + "%"; //wildcards addition
+  }
+
+
+  if($page){
+    try{
+      page = parseInt($page);
+    }catch(e){}
+
+  }
+  if($size){
+    try{
+      size = parseInt($size);
+    }catch(e){}
+  }
+  if($sort){
+    sort = ' order by ' + $sort; // expecting something like "postcode ASC, date DESC". Will throw on error. 
+  }
+
+  var pagination_comp = "";
+  var offset = page * size;
+  if(offset){
+    pagination_comp = " OFFSET " + offset + " LIMIT " + size; 
+  }
+
+
+  var query = 
+    stem + 
+    id_comp +
+    date_comp +
+    lat_comp +
+    lon_comp +
+    postcode_comp +
+    thing_comp +
+    sort + 
+    pagination_comp + ";"; 
+    
+
+  var parameters = [id, date, lat, lon, postcode, thing];
+  try{
+    var response = await thePool.query(query,parameters);
+    result = response.rows;
+  }catch(e){
+    throw(createError(errors.PARAMETER_ERROR,e.message));
+  }
+
+  return result;
+}
+```
+
+
+
+It's a quick and dirty implementation, to illustrate the creation of the dynamic search query, but it fully implements the behaviour we're looking for.
+
+We're going to do the same sort of thing to implement all the other REST endpoints. 
 
