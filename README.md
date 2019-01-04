@@ -1,4 +1,11 @@
 # WildLoggingDB - Re-implementing an API
+
+This is the parent project to:
+
+* [WildLogging](https://github.com/aliceliveprojects/WildLogging)
+* [WildLoggingDB](https://github.com/aliceliveprojects/WildLoggingDB)
+
+
 UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. You can find it [here](https://github.com/TheUrbanWild/WildLogging).
 
 We use the RESTlet platform to provide us with very fast (Free) way of prototyping data APIs - in this case, we logged species and sightings.
