@@ -1,6 +1,8 @@
 # WildLoggingDB - Re-implementing an API
+This project is a sequel to [WildLogging](https://github.com/TheUrbanWild/WildLogging).
 
-This is the parent project to:
+
+It is the parent project to:
 
 * [WildLogging](https://github.com/aliceliveprojects/WildLogging)
 * [WildLoggingDB](https://github.com/aliceliveprojects/WildLoggingDB)
