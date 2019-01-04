@@ -91,7 +91,7 @@ We use Restlet Studio for building an and editing REST API definitions.
 
 The Restlet API for urban wild is public.  
 The original account is available [here](https://cloud.restlet.com/apis/25850/versions/1/overview)  
-The REST API definition is [here](https://cloud.restlet.com/api/apis/25850/versions/1/swagger2?media=json), and copied to this repo [here](https://github.com/TheUrbanWild/WildLoggingDB/blob/master/documentation/restlet/swagger.yaml)  
+The REST API definition is [here](https://cloud.restlet.com/api/apis/25850/versions/1/swagger2?media=json), and copied to this repo [here](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/documentation/restlet/swagger.yaml)  
 Now we have the definition of the interface, to use in this project. Note: RESTlet's UI is the best for creating interfaces. Well worth getting an account and using it.
 
 1. We created a RESTlet account for the porject identity
