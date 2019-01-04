@@ -4,7 +4,7 @@ This project is a sequel to [WildLogging](https://github.com/TheUrbanWild/WildLo
 
 It is the parent project to:
 
-* [WildLogging](https://github.com/aliceliveprojects/WildLogging)
+* [WildLogging](https://github.com/aliceliveprojects/WildLogging) (A fork of the original)
 * [WildLoggingDB](https://github.com/aliceliveprojects/WildLoggingDB)
 
 
