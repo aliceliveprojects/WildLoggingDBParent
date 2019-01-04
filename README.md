@@ -830,7 +830,9 @@ You can set up debugging, by creating a  `.vscode` directory in your project's r
 }
 ```
 
+If get a permission error try replacing `${workspaceFolder}/index.js` with an windows path to the index.js file.
 
+e.g. `H:\\Documents\\GitHub\\MyWildLoggingDB\\index.js`
 
 You'll notice we added the DATABASE_URL, so we can debug the server locally, while using the main db.
 
