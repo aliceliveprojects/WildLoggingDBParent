@@ -421,7 +421,7 @@ CREATE TABLE "public"."events" (
     "date" bigint NOT NULL,
     "thing" text,
     PRIMARY KEY ("id"),
-    FOREIGN KEY ("thing") REFERENCES "public"."Things"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY ("thing") REFERENCES "public"."things"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 ```
 
