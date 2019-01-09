@@ -914,6 +914,60 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
 
 
 
-### You mean... that's it?
-
 Now you should be able to run on local host. Use the Swagger UI to attempt to access both authenticated and non-authenticated endpoints :-)
+
+### Deploying
+
+There are a couple of things which we need to do before deploying, so our authentication system will work:
+
+* Add the new environment variables to Heroku
+* Add the deployed callback page to Auth0
+
+####  Adding the Environment Variables to Heroku
+
+This is pretty straight-forward. Just take the values which you put into your VSCode `launch.json` file:
+
+* AUTH_CLIENT_ID
+* AUTH_APP_NAME
+* AUTH_AUDIENCE
+* AUTH_URI
+* RSA_URI
+
+Like this:
+
+![swagger_spwa_4](./documentation/resources/heroku_deploy_9.png)
+
+
+
+#### Adding the callback page to Auth0
+
+You'll remember that the implicit flow needs to call-back to a web-page with the authorization token, and that Auth0 needs to make sure this is allowed. The SwaggerUI SPWA uses `o2c.html`, but this is now served from our deployed service, and not localhost.
+
+In your Auth0 account, you'll need to change the setting for
+
+**Applications > Settings > Allowed Callback URLs**
+
+Simply change the domain from localhost, to the one you deployed to. In our case, it's  `urbanwilddbapi.herokuapp.com`: 
+
+
+
+![swagger_spwa_4](./documentation/resources/auth0_create_app_8.png)
+
+
+
+## Release
+
+This release marks the API working with the SwaggerUI SPWA, having several authenticated endpoints. 
+
+The WildLogging SPWA is unaffected by this, as it doens't use these endpoints
+
+- This release tag on the WildLoggingDB repo: [authentication_supported](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported)
+
+You can find the final release [here](https://aliceliveprojects.github.io/WildLogging/#/home):
+
+![final](./documentation/resources/final_release.png)
+
+You can find the Swagger SPWA [here](https://urbanwilddbapi.herokuapp.com/docs/#/)
+
+![final](./documentation/resources/final_swaggerui_release.png)
+
