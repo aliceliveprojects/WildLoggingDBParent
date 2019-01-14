@@ -157,7 +157,7 @@ Creating an Application in Auth0 is simply adding a method by which it will be h
 15. ![auth0_create_app_1](./documentation/resources/auth0_create_app_7.png)
 
 
-##Redefine the interface
+## Redefine the interface
 
  We're going to make some changes to our interface definition, to add an authentication requirement onto the correct end-points. 
 
@@ -235,7 +235,8 @@ We're going to add an authentication definition first, which mirrors the definit
          security:
          - urbanwild_admin_auth:
            - "admin"
-  ```
+       ```
+
 ### Adding scopes to the authentication
 #### What are scopes?
 1. You'll notice a term in in the securityDefinition above; 'scopes'
