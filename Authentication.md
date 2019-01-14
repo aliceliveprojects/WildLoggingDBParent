@@ -1,4 +1,4 @@
-# Adding Authentication [UNDER CONSTRUCTION: NOT FOR PUBLIC USE]
+# Adding Authentication
 
 As of release [SPWA Supported]([SPWA Supported](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported)), the application works as an open data API.
 
