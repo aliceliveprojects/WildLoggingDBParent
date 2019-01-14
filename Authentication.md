@@ -235,7 +235,7 @@ We're going to add an authentication definition first, which mirrors the definit
          security:
          - urbanwild_admin_auth:
            - "admin"
-       ```
+  ```
 
 ### Adding scopes to the authentication
 #### What are scopes?
@@ -714,7 +714,7 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
         // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
         app.use(middleware.swaggerMetadata());
     
-    ```
+   ```
 
 14. **with** : 
 
@@ -723,6 +723,8 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
       database.initialise(dbUrl, true);
       // initialise authentication
       auth.initialise(rsaUri);
+      ```
+
     ```
 
 16. make it explicit where the authentication is. Substitute the value from the environment variables in to the `swagger.yaml, so it can be read by the SwaggerUI:
@@ -752,6 +754,8 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
 23. ```javascript
       // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
       app.use(middleware.swaggerMetadata());
+      ```
+
     ```
 
 24. **with:**
@@ -759,11 +763,13 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
 25. ```javascript
       // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
       app.use(middleware.swaggerMetadata());
-    
+          
       // Provide the security handlers
       app.use(middleware.swaggerSecurity({
         urbanwild_admin_auth: auth.authorisation_handler
       }));
+      ```
+
     ```
 
 26. now create a file for the authentication handler: `./utils/authentication.js`:
@@ -921,8 +927,122 @@ Now you should be able to run on local host. Use the Swagger UI to attempt to ac
 
 There are a couple of things which we need to do before deploying, so our authentication system will work:
 
+* Add more environment variables, to override the API location in the swagger.yaml
+  * This means we can have multiple deployments from the same source code
 * Add the new environment variables to Heroku
 * Add the deployed callback page to Auth0
+
+#### API location variables
+
+We're going to add some environment variables which override specific settings in the `swagger.yaml` for the location of the API. 
+
+You'll recall that the SwaggerUI application will read the `swagger.yaml` in order to know where to send HTTP requests to, to access the API.
+
+Having the location of the API set in the swagger.yaml ties the deployment to the information in the repository. If you want the API to have a nice SPWA, it means you can only deploy it to location specified in the yaml. That means only one deployment per copy of the repo.
+
+##### Localhost by default
+
+We'll point our `swagger.yaml` at localhost, by default:
+
+```yaml
+swagger: '2.0'
+info:
+  description: ''
+  version: 1.6.0
+  title: theurbanwild
+  contact:
+    name: alicedigitallabs@gmail.com
+    email: alicedigitallabs@gmail.com
+host: localhost:8080
+schemes:
+  - http
+```
+
+We'll add some code in the server to check for the following optional environment variables:
+
+* API_DOMAIN
+
+* API_PORT
+
+* API_SCHEME
+
+These variables override the values in the `swagger.yaml` ONLY IF THEY ARE SET. The repo is then set up for local debugging by default.
+
+Here are the changes we made to the the `index.js` file in the server, to do it:
+
+ 
+
+```javascript
+var secDefs = swaggerDoc.securityDefinitions;
+for (var secDef in secDefs) {
+    console.log("changing: " + secDefs[secDef].authorizationUrl + " : to : " + authUri);
+    secDefs[secDef].authorizationUrl = authUri;
+}
+
+
+var getSwaggerUIConfig = function(){
+  var result = {};
+
+  result.scheme = process.env.API_SCHEME;
+  result.domain = process.env.API_DOMAIN;
+  result.port = process.env.API_PORT;
+  result.existingPort = process.env.PORT; // assigned by Heroku if deployed.
+  
+  return result;
+
+}
+
+var writeSwaggerUIConfig = function(swaggerDoc, env){
+
+  var doc = {};
+  doc.scheme = swaggerDoc.schemes[0];  //WILL THROW IF SCHEMES NOT DEFINED IN DOC
+  doc.domain = swaggerDoc.host.split(':')[0];  //WILL THROW IF HOST NOT DEFINED IN DOC 
+  doc.port = swaggerDoc.host.split(':')[1];  //WILL THROW IF PORT NOT DEFINED IN DOC  
+  
+  if (env.existingPort){
+    console.log("remote deployment has already defined port");
+    if(env.port){
+      
+      doc.port = env.port; // override (useful for consistency, or if the remote service is not heroku, and listening on a different port.)
+      console.log("external facing port env variable is set. Updating swagger.yaml with this value: %s", doc.port);
+    }else{
+      doc.port = 443; // override the setting with Heroku's default external facing port
+      console.log("external facing port env variable is unset. Updating swagger.yaml with default value: %s", doc.port);
+    }
+  }else{
+    console.log("local deployment.");
+    if(env.port){
+        doc.port = env.port; //override (useful if you have lots of servers running on local host)
+        console.log("overriding swagger.yaml port to env variable: %s", doc.port);
+    }else{
+        env.port = doc.port;
+        console.log("env varable not defined for port. Setting to default from swagger.yaml: %s ", env.port );
+    }
+  }
+  if(env.domain){
+    doc.domain = env.domain; //override (useful if you want to deploy to a different server than specified in the yaml)
+    console.log("overriding swagger.yaml domain to env variable: %s", doc.domain);
+  }
+  if(env.scheme){
+    doc.scheme = env.scheme; // override (useful if you want to deploy to a different comms scheme than that defined in the yaml.
+    console.log("overriding swagger.yaml scheme to env variable: %s", doc.scheme);
+  }
+  
+  var hostAddrPort = doc.domain + ":" + doc.port;
+  var schemes = [doc.scheme];
+
+  swaggerDoc.host = hostAddrPort;
+  swaggerDoc.schemes = schemes;
+  
+  return swaggerDoc;
+}
+
+var swaggerUIConfig = getSwaggerUIConfig();
+swaggerDoc = writeSwaggerUIConfig(swaggerDoc, swaggerUIConfig);
+var serverPort = swaggerUIConfig.existingPort || swaggerUIConfig.port;
+```
+
+... you'll notice we have to deal with a number of scenarios - especially since Heroku routes http traffic through port 443 into a totally different port whichthe NodeJS instance must listen for.
 
 ####  Adding the Environment Variables to Heroku
 
@@ -933,6 +1053,14 @@ This is pretty straight-forward. Just take the values which you put into your VS
 * AUTH_AUDIENCE
 * AUTH_URI
 * RSA_URI
+
+... and the others, which you be able to obtain from your heroku settings:
+
+* API_DOMAIN
+
+- API_PORT
+
+- API_SCHEME
 
 Like this:
 
