@@ -713,8 +713,7 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     
         // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
         app.use(middleware.swaggerMetadata());
-    
-   ```
+    ```
 
 14. **with** : 
 
