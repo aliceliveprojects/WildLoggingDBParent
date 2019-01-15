@@ -725,8 +725,6 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
       auth.initialise(rsaUri);
       ```
 
-    ```
-
 16. make it explicit where the authentication is. Substitute the value from the environment variables in to the `swagger.yaml, so it can be read by the SwaggerUI:
 
 17. **replace** :
@@ -756,8 +754,6 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
       app.use(middleware.swaggerMetadata());
       ```
 
-    ```
-
 24. **with:**
 
 25. ```javascript
@@ -769,8 +765,6 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
         urbanwild_admin_auth: auth.authorisation_handler
       }));
       ```
-
-    ```
 
 26. now create a file for the authentication handler: `./utils/authentication.js`:
 
