@@ -927,11 +927,13 @@ There are a couple of things which we need to do before deploying, so our authen
 
 #### API location variables
 
-We're going to add some environment variables which override specific settings in the `swagger.yaml` for the location of the API. 
+We're going to add some environment variables which override specific settings in the `swagger.yaml` which define the location (scheme, domain, port) of the API. 
 
 You'll recall that the SwaggerUI application will read the `swagger.yaml` in order to know where to send HTTP requests to, to access the API.
 
-Having the location of the API set in the swagger.yaml ties the deployment to the information in the repository. If you want the API to have a nice SPWA, it means you can only deploy it to location specified in the yaml. That means only one deployment per copy of the repo.
+Having the location of the API set in the swagger.yaml ties the deployment to the information in the repository. We don't want this: it means you can only deploy it to location specified in the yaml. That means only one deployment per copy of the repo.
+
+Adding environment variables means we can override these settings when the code is deployed. That means the SwaggerUI can be set to point at the correct server, regardless of where it is deployed from.
 
 ##### Localhost by default
 
