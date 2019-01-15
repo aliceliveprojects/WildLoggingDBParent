@@ -235,7 +235,7 @@ We're going to add an authentication definition first, which mirrors the definit
          security:
          - urbanwild_admin_auth:
            - "admin"
-  ```
+        ```
 
 ### Adding scopes to the authentication
 #### What are scopes?
