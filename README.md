@@ -41,7 +41,7 @@ We've got a number of scripts to go through, in order:
 * [Re-implementing the API](./ReImplementing.md)
 
 * [First Party Authentication](./Authentication.md)
-* [Third-Party Authentication](ThirdPartyAuthentication.md)
+* [Third-Party Authentication](./ThirdPartyAuthentication.md)
 
 
 
