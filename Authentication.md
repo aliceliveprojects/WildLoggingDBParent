@@ -28,13 +28,19 @@ PUT /events/{id}
 
 We're going to wrap these in an authentication layer, so that access is only granted with a valid token.
 
-## Authentication
+## First Party Authentication
 
 If we're going to add authentication to our endpoints, then we need to choose an authentication method which is suitable.
 
 We use a protocol called [OAuth2](https://oauth.net/2/) which is suited to clients such as SPWAs, whose scripts can be seen and altered by end-users with browser tools.
 
 We use a Platform as a Service, called [Auth0](https://auth0.com), which provides us with a generous free tier for prototyping, and handling user accounts.
+
+This script takes you through adding **First-Party authentication** to your API.
+
+First Party Authentication means that we will only grant access to the authenticated parts of the API to a SPWA which has been **served from the same domain as the API**. In this case, that means the **SwaggerUI** you developed in the last script.
+
+Because of Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . Enabling that is another story...!
 
 ## The Plan
 
@@ -235,7 +241,7 @@ We're going to add an authentication definition first, which mirrors the definit
          security:
          - urbanwild_admin_auth:
            - "admin"
-        ```
+  ```
 
 ### Adding scopes to the authentication
 #### What are scopes?
@@ -713,7 +719,7 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     
         // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
         app.use(middleware.swaggerMetadata());
-    ```
+   ```
 
 14. **with** : 
 
