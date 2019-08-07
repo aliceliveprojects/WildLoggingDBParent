@@ -1143,7 +1143,7 @@ When naviagating the hooks section you will be greeted with with 3 different typ
 
 In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
 
-![auth0_hooks banner](./documentation/resources/auth0_hooks banner.png)
+![auth0_hooks banner](./documentation/resources/auth0_hooks_banner.png)
 
 
 
