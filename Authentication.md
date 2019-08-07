@@ -1143,13 +1143,13 @@ When naviagating the hooks section you will be greeted with with 3 different typ
 
 In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
 
-![auth0_hooks banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_hooks banner.png)
+![auth0_hooks banner](./documentation/resources/auth0_hooks banner.png)
 
 
 
 Following this you will be greeted with a auth0  modal (pop up) requesting for a name of your hook, we can name whatever we like but on this occasion we will name it something generic so it's not forgettable. Once you have named it just press create.
 
-![auth0_createHook_modal](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_createHook_modal.png)
+![auth0_createHook_modal](./documentation/resources/auth0_createHook_modal.png)
 
 
 
@@ -1157,11 +1157,11 @@ This will reveal a new change to the hooks page allowing access to the hook.
 
 
 
-![auth0_preRegistration_banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_preRegistration_banner.png)
+![auth0_preRegistration_banner](./documentation/resources/auth0_preRegistration_banner.png)
 
 Click the **pencil icon** to take you over to the text editor for our created hook.
 
-![auth0_editHook_page](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_editHook_page.png)
+![auth0_editHook_page](./documentation/resources/auth0_editHook_page.png)
 
 Assign the following code to the Pre User Registration Hook. The following code adds default scopes to the user's **app_metadata**; now it is possible to have a user within restricted scopes such as **consumer and member**.
 
@@ -1228,7 +1228,7 @@ Here is a rule which is run on authentication, and gives out only the scopes whi
 
 
 
-![auth0_rules banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_rules banner.png)
+![auth0_rules banner](./documentation/resources/auth0_rules banner.png)
 
 
 
