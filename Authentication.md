@@ -1143,9 +1143,7 @@ When naviagating the hooks section you will be greeted with with 3 different typ
 
 In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
 
-![auth0_hooks banner](./documentation/resources/auth0_hooks banner.png)
-
-
+![auth0_hooks_banner](./documentation/resources/auth0_hooks_banner.png)
 
 Following this you will be greeted with a auth0  modal (pop up) requesting for a name of your hook, we can name whatever we like but on this occasion we will name it something generic so it's not forgettable. Once you have named it just press create.
 
