@@ -1210,6 +1210,12 @@ module.exports = function (user, context, cb) {
   
 ```
 
+#### **Summary on Hooks in Auth0**
+
+Hooks are a place in code that allows the developer to tap into a module (in this case custom code using node.js) which allows us to control what behaviour of the code or how it will react when a user interacts with it. Hooks are a way to augment or replace what current code is available.
+
+When using [Database Connections](https://auth0.com/docs/connections/database), Auth0 invokes the Hooks at runtime to execute custom logic.( reference: https://auth0.com/docs/hooks#extensibility-points)
+
 
 
 ### **Adding Rules**
@@ -1222,13 +1228,13 @@ However, what we must do now is to ensure that a claim for researcher or admin i
 
 Here is a rule which is run on authentication, and gives out only the scopes which are requested, and only if they belong to the user. Defaults of consumer and member are added if they are missing.
 
+
+
 ##### **Applying rules on Auth0**
 
+![auth0_rules_banner](./documentation/resources/auth0_rules_banner.png)
 
-
-![auth0_rules banner](./documentation/resources/auth0_rules banner.png)
-
-
+> **The following code must be added to Auth0**
 
 ```javascript
 function (user, context, callback) {
@@ -1279,9 +1285,9 @@ function (user, context, callback) {
 }
 ```
 
+#### **Summary on Rules in Auth0**
 
-
-
+Rules are written functions that execute when a user authenticates your applications. Once the authentication process is complete and you can use them to customize and extend Auth0's capabilities.
 
 ## Release
 
