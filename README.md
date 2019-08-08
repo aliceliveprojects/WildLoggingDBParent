@@ -1,12 +1,11 @@
 # WildLoggingDB - Re-implementing an API
-This project is a sequel to [WildLogging](https://github.com/TheUrbanWild/WildLogging).
 
+This project is a sequel to [WildLogging](https://github.com/TheUrbanWild/WildLogging).
 
 It is the parent project to:
 
 * [WildLogging](https://github.com/aliceliveprojects/WildLogging) (A fork of the original)
 * [WildLoggingDB](https://github.com/aliceliveprojects/WildLoggingDB)
-
 
 UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. You can find it [here](https://github.com/TheUrbanWild/WildLogging).
 
@@ -32,18 +31,18 @@ The result is much more useful, because we can add functionality which transform
 
 Follow along:  it's a good way to experience all the tools and processes, while having something which is easy to test. We're assuming you have a GitHub account already.
 
-
-
 ## How do I do it?
 
 We've got a number of scripts to go through, in order:
 
 * [Re-implementing the API](./ReImplementing.md)
-
 * [First Party Authentication](./Authentication.md)
 * [Third-Party Authentication](./ThirdPartyAuthentication.md)
 
+## Repository Cheatsheet
 
-
-
-
+| SPWA                                                         | REST API                                                     |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| [No Admin Implementation](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/v.1.0) | [Unauthenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported) |
+| [Admin Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_with_admin_and_login_modules) | [Unauthenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported) |
+| [Third Party Authentication Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported) | [Authenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/authentication_supported_updated_scope_check) |
