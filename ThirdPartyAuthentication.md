@@ -1,4 +1,6 @@
-## Enabling Third-Party Authentication
+# Enabling Third-Party Authentication
+
+## Overview
 
 This script takes you through adding **Third-Party authentication** to the API which you have already enabled for First-Party authentication.
 
@@ -6,9 +8,9 @@ First Party Authentication means that we will only grant access to the authentic
 
 Because of Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . 
 
-To do that, we need to enable the Auth0 account, and we need to add some athentication smarts to the SPWA.
+To do that, we need to enable the Auth0 account, and we need to add some authentication smarts to the SPWA.
 
-In this case, the SPWA we'll be upgrading is **WildLogging**. 
+In this case, the SPWA we'll be upgrading is **[WildLogging](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/v.1.0)**. 
 
 We will add:
 
@@ -16,13 +18,15 @@ We will add:
 * A Things page, which handles listing and deleting of Things
 * An Events page, which handles listing and deleting of Events
 
+> However, since this guide is about setting up third-party authentication, we won't have you add the pages above. We will be adding code to a release of the **WildLogging SPWA** where these pages have already been implemented.
+
 First though, the Account.
 
-In the previouse script we defined an application in the Auth0 account (SwaggerUI) and gave it access to our API. Because we *own* the application, and it's served from our domain, we're happy that it's safe.
+In the previous script we defined an application in the Auth0 account (SwaggerUI) and gave it access to our API. Because we *own* the application, and it's served from our domain, we're happy that it's safe.
 
 In the case of the WildLogging application; that's served to us from GitHub Pages; a different domain. It's untrusted.
 
-You'll find that all API providers, Google, Twitter, Facebook etc. require the Developer of an SPWA to register it, and get a client ID, before they are allowed to access the API.
+You'll find that all API providers, Google, Twitter, Facebook etc. require the Developer of an SPWA to register it, and get a client ID, before they are allowed to access their API.
 
 Once the developer has deployed that SPWA, a user of it must consent to it using the API to access their data.
 
@@ -32,12 +36,12 @@ This is exactly what we will be facilitating by making the API available to thir
    1. They get a client ID
 2. The developer writes the application to access the API on the user's behalf 
    1. The application will present the user with a login process
-      1. it gets an access token using Auth0 and the client ID
-      2. the application will access the user's data
+      1. It gets an access token using Auth0 and the client ID
+      2. The application will access the user's data
 3. The  developer deploys the app
    1. To GitHub Pages - a different domain to the API and the Authentication
 4. The user uses the App to access the service:
-   1. They attempt to log-in
+   1. They attempt to login
    2. Auth0 handles the login
       1. Asks the user to give consent for the app to access their data
       2. Allows them to login and connect the app with their data
@@ -49,7 +53,9 @@ This is exactly what we will be facilitating by making the API available to thir
 
 When you set up your account with Auth0, you're given the ability to add applications and APIs to a Tenant. 
 
-In this case, the Tenant is the same as our organisation: Urban Wild. Tenant is a good word: essentially our group of authenticated things called 'Urban Wild' rents space on Auth0's infrastructure.
+> In this case, the **Tenant** is the same as our organisation: Urban Wild.
+>
+> **Tenant is a good word: essentially our group of authenticated things called 'Urban Wild' rents space on Auth0's infrastructure.**
 
 ### Set Auth0 to Allow Dynamic Application Registration
 
@@ -57,15 +63,7 @@ This is the first stage in the process of making the API accessible to third-par
 
 The Urban Wild tenant has some settings which are important. You can find them by logging into your Auth0 account's dashboard, and going into your account profile.
 
-
-
-
-
 ![banner](./documentation/resources/auth0_dash_banner.png)
-
-
-
-
 
 tap on the profile button:
 
@@ -73,5 +71,670 @@ tap on the profile button:
 
 Choose 'Settings'
 
+![auth0_tenant_settings_1](./documentation/resources/auth0_tenant_settings_1.png)
+
+Click on the 'Advanced' tab and scroll down to the 'Settings' section
+
+![auth0_tenant_settings_2](./documentation/resources/auth0_tenant_settings_2.png)
+
+Enable OIDC Dynamic Application Registration
+
+### Add a third party application to the tenant
+
+Enabling the OIDC Dynamic Application Registration will allow us to add a third party application to our tenant using cURL. Copy and paste the following into a text editor and substitute your data into the marked areas ( <> )  :
+
+```bash
+curl --request POST \
+--url 'https://<YOUR_TENANT_DOMAIN>/oidc/register' \
+--header 'content-type: application/json' \
+--data '{"client_name":"<NAME_YOUR_THIRD_PARTY_APPLICATION>","redirect_uris": ["https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth/", "http://localhost:5500/#/admin/auth/"]}'
+```
+
+Then paste your modified cURL request into the terminal and hit enter.
+
+> What should come back:
+
+```json
+{
+  "client_name":"<THE_NAME_YOU_GAVE_TO_YOUR_THIRD_PARTY_APP>",
+  "client_id":"<YOUR_THIRD_PARTY_APP'S_CLIENT_ID>",
+  "client_secret":"LALALALALALALALALAIMNOTTELLING",
+  "redirect_uris":[
+    "https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin",
+    "http://localhost:5500/#/admin"
+  ],
+  "client_secret_expires_at":0
+}
+```
+
+> (It will come back in the terminal as one long JSON string instead of a structured one like you see above)
+>
+> Paste it into [here](http://jsonviewer.stack.hu/) to see it formatted.
+
+You should see the following in the applications page on the Auth0 website :
+
+![auth0_create_third_party_app](./documentation/resources/auth0_create_third_party_app.png)
+
+> Note : It will have the name sent in the cURL request (client_name parameter).
+
+### Change signing algorithm
+
+By default, a third party app's signing algorithm is HS256 but we want RS256 so that we can authenticate using the RSA endpoint.
+
+To change this, find the third party application in the Applications page on the Auth0 website and scroll down until you see a **Show Advanced Settings** button (just above the **Save Changes** button) like in the following image :
+
+![auth0_change_signing_algorithm_1](./documentation/resources/auth0_change_signing_algorithm_1.png)
+
+Once you've clicked on it, go to the OAuth tab and change the **JsonWebToken Signature Algorithm** field to **RS256** like in the following image :
+
+![auth0_change_signing_algorithm_2](./documentation/resources/auth0_change_signing_algorithm_2.png)
+
+Now our JSON Web Tokens (JWTs) will be signed with the algorithm that we expect it to be signed with.
+
+### Set up Tenant Level Connections
+
+To complete enabling of third party applications we need to **promote** the connections our third party app will use to **domain-level connections**.
+
+To do this we will need to use the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections). **However** ... the management API needs the API token of the API that you created by following the previous guide. You can get this token by using an API explorer [here](https://manage.auth0.com/#/apis/management/explorer). Once you have copied the API token. Go back to the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections) and do the following :
+
+![auth0_promote_connections_1](./documentation/resources/auth0_promote_connections_1.png)
+
+Click on the **SET API TOKEN** button.
+
+![auth0_promote_connections_2](./documentation/resources/auth0_promote_connections_2.png)
+
+Paste the API token you copied into the box and click the **SET TOKEN** button.
+
+#### Promoting the connection
+
+Once the Management API SPWA provided by Auth0 has your API token, it can make requests to your **Auth0 Management API** (which you can find in the APIs section of your Auth0 dashboard) that will get the **Connections** in your **Tenant** and will allow you to promote them.
+
+Firstly you need to get the **Username-Password-Authentication** Database Connection's connection ID. You can do this by sending a **GET** request to fetch details about the **Connections** in your **Tenant** :
+
+![auth0_promote_connections_3](./documentation/resources/auth0_promote_connections_3.png)
+
+> If you can't find this endpoint add the following document fragment (#something) onto the end of the URL in the Management API SPWA that you just gave your API token to: `#!/Connections/get_connections`
+
+![auth0_promote_connections_3](./documentation/resources/auth0_promote_connections_4.png)
+
+Then press the **TRY** button
+
+That should return something like the following :
+
+![auth0_promote_connections_5](./documentation/resources/auth0_promote_connections_5.png)
+
+1. The connection ID
+2. Of the **Username-Password-Authentication** Database Connection
+
+Copy the connection ID and use it to send a **PATCH** request to the **Username-Password-Authentication** connection. The request will look like the following :
+
+![auth0_promote_connections_6](./documentation/resources/auth0_promote_connections_6.png)
+
+> If you can't find this endpoint replace the document fragment (#something) at the end of the URL in the Management API SPWA with this one : `#!/Connections/patch_connections_by_id`
+
+Paste the connection ID of **Username-Password-Authentication** into the id field and add `{"is_domain_connection":true}` to the body field.
+
+Then press the **TRY** button.
+
+The response should look something like the following:
+
+![auth0_promote_connections_7](./documentation/resources/auth0_promote_connections_7.png)
+
+If the `"is_domain_connection"` field is set to `true` then **SUCCESS!**. We have successfully promoted our database connection. :)
+
+### Making a small change to the Hosted Login Page
+
+Go to the following url after substituting your tenant name into it :
+
+> manage.auth0.com/dashboard/eu/<YOUR_TENANT_NAME>/login_page
+
+You should see the following page:
+
+![auth0_hosted_login_1](./documentation/resources/auth0_hosted_login_1.png)
+
+>If you don't see the above page then go to your Auth0 dashboard and click on Universal Login (1) and then click on the Login tab (2)
+
+Once you are on this page, toggle the **Customize Login Page** button so that it is enabled as shown in the picture above. If it is already enabled then that is okay as well. After enabling that button you should be able to edit the html below it. The dropdown just above the HTML should say **Default Templates**. If not change it to **Default Templates** and then copy and paste the following code into the editor window :
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Sign In with Auth0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+  <!--[if IE 8]>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/ie8/0.2.5/ie8.js"></script>
+  <![endif]-->
+
+  <!--[if lte IE 9]>
+  <script src="https://cdn.auth0.com/js/base64.js"></script>
+  <script src="https://cdn.auth0.com/js/es5-shim.min.js"></script>
+  <![endif]-->
+
+  <script src="https://cdn.auth0.com/js/lock/11.17/lock.min.js"></script>
+  <script>
+    // Decode utf8 characters properly
+    var config = JSON.parse(decodeURIComponent(escape(window.atob('@@config@@'))));
+    config.extraParams = config.extraParams || {};
+    var connection = config.connection;
+    var prompt = config.prompt;
+    var languageDictionary;
+    var language;
+
+    if (config.dict && config.dict.signin && config.dict.signin.title) {
+      languageDictionary = { title: config.dict.signin.title };
+    } else if (typeof config.dict === 'string') {
+      language = config.dict;
+    }
+    var loginHint = config.extraParams.login_hint;
+    var colors = config.colors || {};
+
+    // Available Lock configuration options: https://auth0.com/docs/libraries/lock/v11/configuration
+    var lock = new Auth0Lock(config.clientID, config.auth0Domain, {
+      auth: {
+        redirectUrl: config.callbackURL,
+        responseType: (config.internalOptions || {}).response_type ||
+          (config.callbackOnLocationHash ? 'token' : 'code'),
+        params: config.internalOptions
+      },
+      /* additional configuration needed for custom domains
+      configurationBaseUrl: config.clientConfigurationBaseUrl,
+      overrides: {
+        __tenant: config.auth0Tenant,
+        __token_issuer: 'YOUR_CUSTOM_DOMAIN'
+      }, */
+      assetsUrl:  config.assetsUrl,
+      allowedConnections: connection ? [connection] : null,
+      rememberLastLogin: !prompt,
+      language: language,
+      languageDictionary: languageDictionary,
+      theme: {
+        //logo:            'YOUR LOGO HERE',
+        primaryColor:    colors.primary ? colors.primary : 'green'
+      },
+      prefill: loginHint ? { email: loginHint, username: loginHint } : null,
+      closable: false,
+      defaultADUsernameFromEmailPrefix: false,
+      __useTenantInfo: config.isThirdPartyClient
+      // uncomment if you want small buttons for social providers
+      // socialButtonStyle: 'small'
+    });
+
+    if(colors.page_background) {
+      var css = '.auth0-lock.auth0-lock .auth0-lock-overlay { background: ' +
+                  colors.page_background +
+                ' }';
+      var style = document.createElement('style');
+
+      style.appendChild(document.createTextNode(css));
+
+      document.body.appendChild(style);
+    }
+
+    lock.show();
+  </script>
+</body>
+</html>
+```
+
+This is the same as the code that was already there except for one line. The new line that was added is shown in the following screenshot (line 64) :
+
+![auth0_hosted_login_2](./documentation/resources/auth0_hosted_login_2.png)
+
+## Adding authentication to the SPWA
+
+Download [this release](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_with_admin_and_login_modules) of the WildLogging SPWA.
+
+Open the downloaded SPWA in VSCode. You should see a directory structure that looks like the following :
 
 
+
+![third_party_spwa_1](./documentation/resources/third_party_spwa_1.png)
+
+
+
+We are going to add a new `callback` state to our application. In order to comply with the established directory structure, make a directory called "callback" inside of the folder "state".
+
+
+
+![third_party_spwa_2](./documentation/resources/third_party_spwa_2.png)
+
+
+
+After you have created the folder, add a HTML file and a JavaScript file into the folder and name them as shown in the picture above.
+
+#### callback.controller.js
+
+```javascript
+(function () {
+
+  'use strict';
+
+  let app = angular.module('app.callbackState', []);
+
+  app.config(function (
+    $stateProvider
+  ) {
+    $stateProvider.state('callback', {
+      url: '/callback',
+      templateUrl: 'scripts/states/callback/callback.html',
+      controller: 'callbackCtrl as vm',
+      cache: false
+    });
+  })
+  
+  app.controller('callbackCtrl', callbackCtrl);
+
+  callbackCtrl.$inject = [
+    '$state'
+  ];
+
+  function callbackCtrl($state) {
+    $state.go("admin");
+  }
+
+})();
+```
+
+> Make sure to link to the `callback.controller.js` file in the `index.html` file.
+> **Example** :
+> `<script type="text/javascript" src="scripts/states/callback/callback.controller.js"></script>`
+
+This script also creates the `app.callbackState` module and configures the `callback` state within angular as well. So make sure to import the `app.callbackState` module in `app.js` as shown in the following code snippet :
+
+```javascript
+const app = angular.module('starter', [
+    'auth0.auth0',
+    'ui.router',
+    'ngAnimate',
+    'ui.bootstrap',
+    'ui-notification',
+    'app.homeState',
+    'app.searchState',
+    'app.aboutState',
+    'app.locations',
+    'app.api',
+    'app.loginState',
+    'app.adminState',
+    'app.callbackState' // <- Add this to app.js
+]);
+```
+
+#### callback.html
+
+```html
+<div class="loading">
+  <img src="img/loading.svg" alt="loading">
+</div>
+```
+
+> You can get the `loading.svg` file from the [final release](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported) of the WildLogging SPWA
+>
+> **OR** Save just the file on its own from [here](https://raw.githubusercontent.com/aliceliveprojects/WildLoggingAndAdmin/master/img/loading.svg)
+>
+> **OR** You can create the file locally in the `./img` folder locally and paste the following code into the file :
+
+```html
+<?xml version="1.0" encoding="utf-8"?><svg width='120px' height='120px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="uil-ring"><rect x="0" y="0" width="100" height="100" fill="none" class="bk"></rect><defs><filter id="uil-ring-shadow" x="-100%" y="-100%" width="300%" height="300%"><feOffset result="offOut" in="SourceGraphic" dx="0" dy="0"></feOffset><feGaussianBlur result="blurOut" in="offOut" stdDeviation="0"></feGaussianBlur><feBlend in="SourceGraphic" in2="blurOut" mode="normal"></feBlend></filter></defs><path d="M10,50c0,0,0,0.5,0.1,1.4c0,0.5,0.1,1,0.2,1.7c0,0.3,0.1,0.7,0.1,1.1c0.1,0.4,0.1,0.8,0.2,1.2c0.2,0.8,0.3,1.8,0.5,2.8 c0.3,1,0.6,2.1,0.9,3.2c0.3,1.1,0.9,2.3,1.4,3.5c0.5,1.2,1.2,2.4,1.8,3.7c0.3,0.6,0.8,1.2,1.2,1.9c0.4,0.6,0.8,1.3,1.3,1.9 c1,1.2,1.9,2.6,3.1,3.7c2.2,2.5,5,4.7,7.9,6.7c3,2,6.5,3.4,10.1,4.6c3.6,1.1,7.5,1.5,11.2,1.6c4-0.1,7.7-0.6,11.3-1.6 c3.6-1.2,7-2.6,10-4.6c3-2,5.8-4.2,7.9-6.7c1.2-1.2,2.1-2.5,3.1-3.7c0.5-0.6,0.9-1.3,1.3-1.9c0.4-0.6,0.8-1.3,1.2-1.9 c0.6-1.3,1.3-2.5,1.8-3.7c0.5-1.2,1-2.4,1.4-3.5c0.3-1.1,0.6-2.2,0.9-3.2c0.2-1,0.4-1.9,0.5-2.8c0.1-0.4,0.1-0.8,0.2-1.2 c0-0.4,0.1-0.7,0.1-1.1c0.1-0.7,0.1-1.2,0.2-1.7C90,50.5,90,50,90,50s0,0.5,0,1.4c0,0.5,0,1,0,1.7c0,0.3,0,0.7,0,1.1 c0,0.4-0.1,0.8-0.1,1.2c-0.1,0.9-0.2,1.8-0.4,2.8c-0.2,1-0.5,2.1-0.7,3.3c-0.3,1.2-0.8,2.4-1.2,3.7c-0.2,0.7-0.5,1.3-0.8,1.9 c-0.3,0.7-0.6,1.3-0.9,2c-0.3,0.7-0.7,1.3-1.1,2c-0.4,0.7-0.7,1.4-1.2,2c-1,1.3-1.9,2.7-3.1,4c-2.2,2.7-5,5-8.1,7.1 c-0.8,0.5-1.6,1-2.4,1.5c-0.8,0.5-1.7,0.9-2.6,1.3L66,87.7l-1.4,0.5c-0.9,0.3-1.8,0.7-2.8,1c-3.8,1.1-7.9,1.7-11.8,1.8L47,90.8 c-1,0-2-0.2-3-0.3l-1.5-0.2l-0.7-0.1L41.1,90c-1-0.3-1.9-0.5-2.9-0.7c-0.9-0.3-1.9-0.7-2.8-1L34,87.7l-1.3-0.6 c-0.9-0.4-1.8-0.8-2.6-1.3c-0.8-0.5-1.6-1-2.4-1.5c-3.1-2.1-5.9-4.5-8.1-7.1c-1.2-1.2-2.1-2.7-3.1-4c-0.5-0.6-0.8-1.4-1.2-2 c-0.4-0.7-0.8-1.3-1.1-2c-0.3-0.7-0.6-1.3-0.9-2c-0.3-0.7-0.6-1.3-0.8-1.9c-0.4-1.3-0.9-2.5-1.2-3.7c-0.3-1.2-0.5-2.3-0.7-3.3 c-0.2-1-0.3-2-0.4-2.8c-0.1-0.4-0.1-0.8-0.1-1.2c0-0.4,0-0.7,0-1.1c0-0.7,0-1.2,0-1.7C10,50.5,10,50,10,50z" fill="#337ab7" filter="url(#uil-ring-shadow)"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" repeatCount="indefinite" dur="1s"></animateTransform></path></svg>
+```
+
+#### login.html
+
+Replace the `button` element with the following :
+
+```html
+<button ng-if="!vm.auth.isAuthenticated()" ng-click="vm.auth.login()" class="btn btn-primary">LOGIN</button>
+<button ng-if="vm.auth.isAuthenticated()" ng-click="vm.auth.logout()" class="btn btn-primary">LOGOUT</button>
+```
+
+> The `ng-if` and `ng-click`directives need there to be a property called `auth` on the controller object (`vm`), so that it can call the apprpriate methods to log the user in or out; as well as display the correct button depending on wheter the user is logged in or out.
+>
+> We should add a reference to the authentication service in our controller function.
+
+#### login.controller.js
+
+```javascript
+(function () {
+
+    'use strict';
+
+    var app = angular.module('app.loginState');
+
+    app.controller('loginCtrl', loginCtrl);
+
+    loginCtrl.$inject = [
+        'authService'
+    ];
+
+    function loginCtrl(
+        authService
+    ) {
+
+        var vm = angular.extend(this, {});
+
+        vm.auth = authService;
+
+        return vm;
+
+    }
+
+})();
+```
+
+> Your login controller logic should look like the logic above.
+
+### Creating the Authentication Service
+
+Create a new JavaScript file in the `services` folder. We've called ours `auth.service.js` but you can call it something else if you want to as long as you **link to the script in the index.html** with the **same name**.
+
+Once the file has been created, paste the following code into the file.
+
+#### auth.service.js
+
+```javascript
+(function () {
+
+  'use strict';
+
+  const app = angular.module('starter');
+
+  app.service('authService', authService);
+
+  authService.$inject = ['$state', 'angularAuth0', '$timeout'];
+
+  function authService($state, angularAuth0, $timeout) {
+
+    let service = {};
+
+    let accessToken;
+    let idToken;
+    let expiresAt;
+
+    service.getIdToken = function getIdToken() {
+      return idToken;
+    }
+
+    service.getAccessToken = function getAccessToken() {
+      return accessToken;
+    }
+
+    service.login = function login() {
+      angularAuth0.authorize();
+    }
+
+    service.handleAuthentication = function handleAuthentication() {
+      angularAuth0.parseHash(function (err, authResult) {
+        if (authResult && authResult.accessToken && authResult.idToken) {
+          service.localLogin(authResult);
+          $state.go('callback');
+        } else if (err) {
+          $timeout(function () {
+            $state.go('login');
+          });
+          console.log(error);
+          alert('Error: ' + err.error + '. Check the console for further details.');
+        }
+      });
+    }
+
+    service.localLogin = function localLogin(authResult) {
+      // Set isLoggedIn flag in localStorage
+      localStorage.setItem('isLoggedIn', 'true');
+      // Set the time that the access token will expire at
+      expiresAt = (authResult.expiresIn * 1000) + new Date().getTime();
+      accessToken = authResult.accessToken;
+      idToken = authResult.idToken;
+    }
+
+    service.renewTokens = function renewTokens() {
+      angularAuth0.checkSession({},
+        function(err, result) {
+          if (err) {
+            console.log(err);
+          } else {
+            localLogin(result);
+          }
+        }
+      );
+    }
+
+    service.logout = function logout() {
+      // Remove isLoggedIn flag from localStorage
+      localStorage.removeItem('isLoggedIn');
+      // Remove tokens and expiry time
+      accessToken = '';
+      idToken = '';
+      expiresAt = 0;
+      $state.go('login');
+    }
+
+    service.isAuthenticated = function isAuthenticated() {
+      // Check whether the current time is past the 
+      // access token's expiry time
+      return localStorage.getItem('isLoggedIn') === 'true' && new Date().getTime() < expiresAt;
+    }
+
+    return service;
+
+  }
+
+})();
+```
+
+##### Configuring the authentication service
+
+For the service to work properly it needs to be configured. This is done by adding the following into the `app.js` file :
+
+```javascript
+    angularAuth0Provider.init({
+        clientID: CLIENT_CONFIG.AUTH0_CLIENT_ID,
+        domain: CLIENT_CONFIG.AUTH0_DOMAIN,
+        responseType: 'token id_token',
+        redirectUri: CLIENT_CONFIG.AUTH0_CALLBACK_URL,
+        scope: CLIENT_CONFIG.AUTH0_REQUESTED_SCOPES,
+        audience: CLIENT_CONFIG.AUTH0_AUDIENCE
+    });
+```
+
+> Add the code in the snippet above into the `app.js` file in the `app.config()` function after the line `$locationProvider.html5Mode(true);`.
+
+We are also going to add some logic to the `app.run()` function in `app.js`. Replace it with the following version :
+
+```javascript
+app.run(function ($state, $rootScope, $transitions, authService) {
+
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        authService.renewTokens();
+    } else {
+        // Handle the authentication
+        // result in the hash
+        authService.handleAuthentication();
+    }
+
+    $transitions.onSuccess({}, function () {
+        $('.navbar-collapse').collapse('hide');
+    });
+
+});
+```
+
+You may also want to change the name of the `auth0_variables.js` file to `client_variables.js` and fix the link to it in `index.html`.  After that replace the code in the file now called `client_variables.js` with the following code :
+
+```javascript
+const CLIENT_CONFIG = {
+  "AUTH0_CLIENT_ID":"<YOUR_THIRD_PARTY_SPWA_CLIENT_ID_FROM_AUTH0>",
+  "AUTH0_DOMAIN":"<YOUR_AUTH0_DOMAIN>",
+
+  "AUTH0_CALLBACK_URL":"https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth",
+  // "AUTH0_CALLBACK_URL":"http://localhost:5500/#/admin/auth",
+  
+  "APP_SCHEME": "https", 
+  // "APP_SCHEME": "http", 
+
+  "APP_DOMAIN": "<YOUR_GITHUB_USERNAME>.github.io", 
+  // "APP_DOMAIN": "localhost", 
+
+  "APP_PORT": "443", 
+  // "APP_PORT": "5501",
+
+  "AUTH0_AUDIENCE": "<YOUR_AUTH0_API_AUDIENCE>",
+  "AUTH0_REQUESTED_SCOPES": "admin" 
+};
+```
+
+### Handling 404 redirects
+
+Create a `404.html` file in the root directory of the SPWA and paste the following code into it :
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+
+  <title>404</title>
+
+  <script>
+    sessionStorage.redirect = location.href;
+  </script>
+
+  <meta http-equiv="refresh" content="0;URL='/WildLoggingAndAdmin'">
+</head>
+
+<body>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</body>
+
+
+</html>
+```
+
+> When serving from GitHub pages this `404.html` file will be served when Auth0 redirects after a login as the callback URL, in `client_variables.js`, points to a path that does not exist within our SPWA.
+> When the 404 page is served it will store the callback url (which will have the access token returned by Auth0 on it) into a property of the `sessionStorage` object and then it will redirect to the root of the SPWA immediately.
+> After the refirect happens, the next step in the logic of the auth service will execute a local login which will save the access token amongst a few other things that Auth0 returned to us after a login.
+> Then the SPWA transitions to the `callback` state. The `callback` state then redirects immediately to the `admin` state which is where we want the user to go if they have successfully authenticated.
+
+#### Protecting the access token
+
+The access token returned by Auth0 is needed to successfully make requests to the API. After the SPWA's authentication service has got a hold of it, as well as the other things that are sent back with it, it needs to be deleted. This is done in the `index.html` file as we have set our redirect in the `404.html` file to be WildLoggingAndAdmin/ which is the base URL of the SPWA.
+
+### index.html
+
+```html
+<body>
+
+  <script>
+    (function () {
+      let redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect != location.href) {
+        history.replaceState(null, null, redirect);
+      }
+    })();
+  </script>
+
+  <div ng-app="starter" ng-cloak>
+    <connectionerror show="vm.errorModalShow">
+      modal connection error window
+      {{vm.errorModalText}}
+    </connectionerror>
+  
+    <toaster-container></toaster-container>
+  
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+          aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a ui-sref-active="active" class="navbar-brand" ui-sref="home">Wild Logging</a>
+
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul ng-controller="appCtrl as vm" class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a ui-sref-active="active" class="nav-link" ui-sref="home">Home</a>
+          </li>
+          <li class="nav-item">
+            <a ng-if="vm.auth.isAuthenticated()" ui-sref-active="active" class="nav-link" ui-sref="admin">Admin</a>
+          </li>
+          <li class="nav-item">
+            <a ng-if="!vm.auth.isAuthenticated()" ui-sref-active="active" class="nav-link" ui-sref="login">Login</a>
+            <a ng-if="vm.auth.isAuthenticated()" ng-click="vm.auth.logout()" class="nav-link" >Logout</a>
+          </li>
+          <li class="nav-item">
+            <a ui-sref-active="active" class="nav-link" ui-sref="about">About</a>
+          </li>
+          <li class="nav-item">
+            <a ui-sref-active="active" class="nav-link" ui-sref="search">Map</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <ui-view>
+    </ui-view>
+  </div>
+</body>
+```
+
+> Replace your `index.html` file's body element with the one above. We have added a button that takes you directly to the admin state, but only if you have logged in. We have also added  buttons that are very similar to the buttons on the login page of the SPWA, where the login and logout buttons are only displayed based on whether the user has logged in or not.
+
+There are also some changes that need to be made to app.js for the changes in index.html to work properly.
+
+### app.js
+
+Add the following code beneath the `app.run()` function.
+
+```javascript
+  // This allows the nav links access to the authentication service,
+  // in order to toggle the login and admin links based on whether the user has logged in.
+  app.controller('appCtrl', appCtrl);
+  appCtrl.$inject = ['authService'];
+  function appCtrl(
+    authSrvc
+  ) {
+    let vm = angular.extend(this, {});
+    vm.auth = authSrvc;
+    return vm;
+  }
+```
+
+Now it's time to run the SPWA locally, but before we do. We need to change the client variables to their localhost counterparts.
+
+Your `client_variables.js` file should look like the following :
+
+```javascript
+const CLIENT_CONFIG = {
+  "AUTH0_CLIENT_ID":"QwJzw4L3z3b0DKzdoPa1CMW4106iBIak",
+  "AUTH0_DOMAIN":"urbanwild.eu.auth0.com",
+
+  // "AUTH0_CALLBACK_URL":"https://aliceliveprojects.github.io/WildLoggingAndAdmin/admin/auth",
+  "AUTH0_CALLBACK_URL":"http://localhost:5500/#/admin/auth",
+  
+  // "APP_SCHEME": "https", 
+  "APP_SCHEME": "http", 
+
+  // "APP_DOMAIN": "aliceliveprojects.github.io", 
+  "APP_DOMAIN": "localhost", 
+
+  // "APP_PORT": "443", 
+  "APP_PORT": "5501",
+
+  "AUTH0_AUDIENCE": "https://www.urbanwild/wildloggingadmin",
+  "AUTH0_REQUESTED_SCOPES": "admin" 
+};
+```
+
+> Run this locally with your API that you created in the previous guide. For comparison the latest release of both the SPWA and the API are linked below.
+
+## Finished versions for reference
+
+| SPWA                                                         | REST API                                                     |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| [Third Party Authentication Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported) | [Authenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/authentication_supported_updated_scope_check) |
