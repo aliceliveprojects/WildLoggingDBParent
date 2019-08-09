@@ -1,3 +1,7 @@
+
+
+
+
 # Adding Authentication
 
 As of release [SPWA Supported](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported), the application works as an open data API.
@@ -42,26 +46,13 @@ First Party Authentication means that we will only grant access to the authentic
 
 Because of Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . Enabling that is another story...!
 
-## The Plan
-
-1. create a new Auth0 account 
-2. use the RESTlet UI to add authentication definitions to our REST API definition (the swagger.yaml file)
-3. set-up Auth0 account to handle authorisation requests, coming from our SwaggerUI.
-4. set-up our SwaggerUI to generate authorisation requests
-5. upgrade our service so we can set up our SwaggerUI wherever it is deployed.
-6. add authentication handlers to the RESTFul service, which map to the authentication definitions
-7. use the authentication handlers to intercept incoming REST requests and validate the authentication tokens, encoded in their headers.
-8. Implement code which validates the tokens against a service endpoint, provided by Auth0.
-
-# Here we go
-
 ## Auth0, the authorisation provider
 
 First things, first; Auth0 is going to help us manage users, and to check whether they are authenticated to access the sensitive parts of the API.  
 
 Auth0 handles user accounts as well as the entire sign-up and login process to our API. We'll be creating our own admin account on Auth0. This will give us a free-tier allowance of 10,000 user accounts. 
 
- A good place to start is simply to switch off the sign-up option which Auth0 presents to new users, and to create accounts only for yourself and your team. We'll be doing this later, but wanted to let know know that first :-)
+ A good place to start is simply to switch off the sign-up option which Auth0 presents to new users, and to create accounts only for yourself and your team. We'll be doing this later, but wanted to let you know that first :-)
 
 Don't forget: when you allow a user to sign-up to your service, you will be liable for the information they give you under [GDPR](https://ico.org.uk/for-organisations/guide-to-data-protection/). Auth0 provides all the tools you need to be GDPR compliant, but you need to be aware of your obligations. Be aware that anyone signing up to your service has rights on the information that they leave there.
 
@@ -91,8 +82,8 @@ To make this possible, the token is of a particular format: [JWT, or JSON Web To
 
 Creating an Auth0 account couldn't be simpler: 
 
-1. go to https://auth0.com/ and click on 'Sign-up'. 
-2. you'll be presented with a choice of email address + password , or syndiction with Google, Facebook, or Github account. We used the email address option and used the same credentials as for our Heroku account earlier.
+1. Go to https://auth0.com/ and click on 'Sign-up'. 
+2. You'll be presented with a choice of email address + password , or syndiction with Google, Facebook, or Github account. We used the email address option and used the same credentials as for our Heroku account earlier.
 3. Next, you'll be asked for a 'tenant' domain name. It's used for authentication endpoints. We chose 'urbanwild'.
 4. Also, make sure you choose the EU region to host your user account data. 
 5. ![minipic](./documentation/resources/auth0_signup_2.png)
@@ -108,7 +99,7 @@ Your Auth0 account needs to create settings for
 2. An API
 3. A SPWA client
 
-### connection to user database
+### Connection to user database
 
 This is easy: we want Auth0 to handle our user accounts, so we will make no change to our account's default setting, which uses it's own database, called **Username-Password-Authentication**
 
@@ -116,23 +107,23 @@ This is easy: we want Auth0 to handle our user accounts, so we will make no chan
 
 Creating an API in Auth0 is simply creating a configuration for the API which you want to protect.
 
-Create an API in Auth0: 
+Create an API in Auth0 by: 
 
-1. select the APIs item in the list on the left, and then click the '+ CREATE API' button
+1. Selecting **APIs** in the list on the left, and then click the '**+ CREATE API**' button
 2. ![auth0_create_api_1](./documentation/resources/auth0_create_api_1.png)
-3. give the API entry a name, and an identifier: you'll see we're choosing to identify it via the organisation name 'urban wild'
-4. the signing algorithm is very important here: make sure you set it to `RS256`.
+3. Give the API entry a name, and an identifier: you'll see we're choosing to identify it via the organisation name 'urban wild'
+4. The **signing algorithm** is very important here: make sure you set it to `RS256`.
 5. ![auth0_create_api_2](./documentation/resources/auth0_create_api_2.png)
-6. your API is created and you can now see it in the list:
+6. Your API is created and you can now see it in the list:
 7. ![auth0_create_api_3](./documentation/resources/auth0_create_api_3.png)
 
 ## Application
 
 Creating an Application in Auth0 is simply adding a method by which it will be handling authorisation requests. In this case we want to enable a mechanism which can be used to authorise access by users via 'unsecure' applications. That is, those which expose code or data easily; such as those running in a browser: SPWAs
 
-1. In your Auth0 dashboard, click on 'Applications'
+1. In your Auth0 dashboard, click on '**Applications**'
 
-2. Click on '+ CREATE APPLICATION':
+2. Click on '**+ CREATE APPLICATION**':
 
 3. ![auth0_create_app_1](./documentation/resources/auth0_create_app_1.png)
 
@@ -142,17 +133,17 @@ Creating an Application in Auth0 is simply adding a method by which it will be h
 
 6. Choosing the type of application here allows Auth0 to figure out the mechanism by which it will expect authorisation requests, and to supply you with helpful info and libraries
 
-7. Since we're using the SwaggerUI, we'll choose SPWA. Click 'Create'
+7. Since we're using the SwaggerUI, we'll choose **SPWA**. **Click 'Create**'
 
 8. ![auth0_create_app_1](./documentation/resources/auth0_create_app_3.png)
 
-9. Choose 'JS' for the tech.
+9. Choose **'JS'** for the tech.
 
 10. ![auth0_create_app_1](./documentation/resources/auth0_create_app_4.png)
 
 11. We've created the Application entry. Notice it's got a **Client ID** which we'll return to later.
 
-12. Finally, we want to debug our app locally, which means we want to get an authentication callback to a page which our client will know to intercept, to obtain the JWT. Our Swagger UI SPWA uses a file called o2c.html. More about this later.
+12. Finally, we want to debug our app locally, which means we want to get an authentication callback to a page which our client will know to intercept, to obtain the **JWT**. Our Swagger UI SPWA uses a file called o2c.html. More about this later.
 
 13. In Applications > Settings, put the following into **Allowed callback URLs**:
 
@@ -164,7 +155,7 @@ Creating an Application in Auth0 is simply adding a method by which it will be h
 
 ## Redefine the interface
 
- We're going to make some changes to our interface definition, to add an authentication requirement onto the correct end-points. 
+We're going to make some changes to our interface definition, to add an authentication requirement onto the correct end-points. 
 
 Ensure that you have the project downloaded to the local file system, and opened in VSCode (or your favorite editor...)
 
@@ -192,7 +183,7 @@ We're going to add an authentication definition first, which mirrors the definit
 
 1. Find the section `definitions`
 
-2. Add the following code, before the section:
+2. Add the following code, **before the section:**
 
 3. ```yaml
    securityDefinitions:
@@ -230,18 +221,34 @@ We're going to add an authentication definition first, which mirrors the definit
             description: "Identifier of the Thing"
             required: true
             type: "string"
-          responses:
+          responses: # From Here
             200:
               description: "Status 200"
-            400:
+            400: 
               description: "Bad request"
             401:
               description: "Unauthorized"
           security:
           - urbanwild_admin_auth:
-            - "admin"
+            - "admin" # End Here
    ```
 
+
+
+8. From the line of the first comment to line of the final comment, it is imperative we add have the responses and security block added.
+
+```yaml
+responses:
+     200:
+       description: "Status 200"
+     400: 
+       description: "Bad request"
+     401:
+       description: "Unauthorized"
+   security:
+   - urbanwild_admin_auth:
+     - "admin" 
+```
 
 
 ### Adding scopes to the authentication
@@ -249,9 +256,9 @@ We're going to add an authentication definition first, which mirrors the definit
 #### What are scopes?
 
 1. You'll notice a term in in the securityDefinition above; 'scopes'
-2. scopes are pretty big in OAuth; a scope can be seen as a capability or a priviledge which a client is granted when they access a system via its API.
+2. Scopes are pretty big in OAuth; a scope can be seen as a capability or a priviledge which a client is granted when they access a system via its API.
 3. when a client uses an OAuth service to provide user authorisation for an API, it can supply the scopes it wants within the authorisation request.
-4. the OAuth service looks up the user associated with the authorisation request, and checks the vaility of the requested scope
+4. The OAuth service looks up the user associated with the authorisation request, and checks the validity of the requested scope
 5. If the scope is valid, the OAuth server puts it into the authorisation token result.
 6. The client can then pass the authorization token to the API with each http request
 7. Some endpoints will require different scopes
@@ -265,10 +272,10 @@ We're going to ensure that the `wildlogginadmin` authorization adds an 'admin' s
 
 1. In your Auth0 account, click on the API again, to check out the detail:
 2. ![auth0_create_api_4](./documentation/resources/auth0_create_api_4.png)
-3. in addition to the 'settings' tab, you'll find the 'scopes' tab. Click on it.
+3. In addition to the '**settings**' tab, you'll find the **'scopes**' tab. Click on it.
 4. ![auth0_create_api_5](./documentation/resources/auth0_create_api_5.png)
-5. now add a scope entry called `admin`, and give it a description
-6. you can see that it's no more than a tag, associated with this wildloggingadmin API.
+5. Now add a scope entry called `admin`, and give it a description
+6. You can see that it's no more than a tag, associated with this wildloggingadmin API.
 7. Auth0 has the apbility let you assoicate these scopes with users in the database, so you can give them extra privileges on your API.
 8. For now, we're just using the one scope.
 
@@ -316,19 +323,19 @@ We need to get our own version of the source, and modify that.
 
 2. Click on the clone or download button, and choose 'download ZIP'
 
-3. extract the contents of the zip file in your downloads directory.
+3. Extract the contents of the zip file in your downloads directory.
 
-4. copy the 'dist' directory from the contents into your project, at the root level
+4. Copy the 'dist' directory from the contents into your project, at the root level
 
-5. rename the 'dist' directory to 'swagger_spwa'
+5. Rename the 'dist' directory to 'swagger_spwa'
 
 6. ![swagger_spwa_1](./documentation/resources/swagger_spwa_1.png)
 
 7. We need to tell our server to deploy this version of the swagger-ui, rather than the bundled one
 
-8. in `index.js` 
+8. In `index.js` 
 
-9. **replace**
+9. **Replace**
 
 10. ```javascript
     // Serve the Swagger documents and Swagger UI
@@ -339,7 +346,7 @@ We need to get our own version of the source, and modify that.
     
     ```
 
-11. **with**
+11. **With**
 
 12. ```javascript
          // Serve the Swagger documents and Swagger UI
@@ -358,9 +365,9 @@ We need to get our own version of the source, and modify that.
 
 **Don't worry!** No client secrets will be exposed.
 
-1. create the file: `authproviderconfig.js` in `./swagger_spwa`
+1. Create the file: `authproviderconfig.js` in `./swagger_spwa`
 
-2. add the following javascript, substituting the values from your account where necessary:
+2. Add the following javascript, substituting the values from your account where necessary:
 
 3. ```javascript
    var auth_config = 
@@ -377,7 +384,7 @@ We need to get our own version of the source, and modify that.
    }
    ```
 
-4. replace the contents of the `index.html`file with the following
+4. Replace the contents of the `index.html`file with the following
 
 5. ```html
     
@@ -607,7 +614,7 @@ You'll have noticed that there is a lot to do when we set-up an authenticated se
 
 8. Make a call to the functions, when you're initialising everything else:
 
-9. **replace**
+9. **Replace**
 
 10. ```javascript
     // database connection
@@ -616,7 +623,7 @@ You'll have noticed that there is a lot to do when we set-up an authenticated se
 
 11. 
 
-12. **with**
+12. **With**
 
 13. ```javascript
     // configure where the SwaggerUI looks for authentication
@@ -658,7 +665,7 @@ example: `https://urbanwild.eu.auth0.com/authorize`
 
 **RSA_AUTH_URI** - `https://<your auth0 domain>/.well-known/jwks.json`
 
-example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
+example: `https://urbanwild.eu.auth0.com/.well-known/jwks.json`
 
 
 
@@ -705,7 +712,7 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
    
    // URL provided by the Auth0 authentication PaaS
    if(!process.env.AUTH_URI) throw new Error("undefined in environment: AUTH_URI");
-   var authUrl = process.env.AUTH_URI;
+   var authUri = process.env.AUTH_URI;
    
    
    // RSA Authentication, supplied by Auth0 authentication PaaS.
@@ -713,7 +720,7 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
    var rsaUri = process.env.RSA_URI;
    ```
 
-6. we're going to add the authentication handler functionality in a single file:
+6. We're going to add the authentication handler functionality in a single file:
 
 7. **replace** :
 
@@ -728,60 +735,53 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     var auth = require('./utils/authentication');
     ```
 
-11. we're going to initialise this 'authentication handler', here, too:
+11. We're going to initialise this 'authentication handler', here, too:
 
-12. **replace** : 
+12. **Add this line**
 
-13. ```javascript
-      
-         // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
-         app.use(middleware.swaggerMetadata());
-    ```
-
-14. **with** : 
-
-15. ```javascript
+    ```javascript
     // database connection
     database.initialise(dbUrl, true);
     // initialise authentication
     auth.initialise(rsaUri);
     ```
 
-16. make it explicit where the authentication is. Substitute the value from the environment variables in to the `swagger.yaml, so it can be read by the SwaggerUI:
+13. **Beneath this line** 
 
-17. **replace** :
+14. ```javascript
+    // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
+         app.use(middleware.swaggerMetadata());
+    ```
 
-18. ```javascript
+    make it explicit where the authentication is. Substitute the value from the environment variables in to the `swagger.yaml, so it can be read by the SwaggerUI:
+
+    
+
+15. **Add this line**
+
+    ```javascript
+    var secDefs = swaggerDoc.securityDefinitions;
+    
+    for (var secDef in secDefs) {
+    		console.log("changing: " + secDefs[secDef].authorizationUrl + " : to : " + authUri);
+    		secDefs[secDef].authorizationUrl = authUri;
+    }
+    ```
+
+    
+
+16. **Beneath this line**
+
+17. ```javascript
     var swaggerDoc = jsyaml.safeLoad(spec);
     
     ```
 
-19. **with** :
+18. Finally, plug-in the authentication handler:
+
+19. **with:**
 
 20. ```javascript
-    var swaggerDoc = jsyaml.safeLoad(spec);
-    
-    var secDefs = swaggerDoc.securityDefinitions;
-    for (var secDef in secDefs) {
-        console.log("changing: " + secDefs[secDef].authorizationUrl + " : to : " + authUri);
-        secDefs[secDef].authorizationUrl = authUri;
-    }
-    
-    ```
-
-21. finally, plug-in the authentication handler:
-
-22. **replace**:
-
-23. ```javascript
-    // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
-    app.use(middleware.swaggerMetadata());
-    
-    ```
-
-24. **with:**
-
-25. ```javascript
     // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
     app.use(middleware.swaggerMetadata());
         
@@ -791,9 +791,18 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     }));
     ```
 
-26. now create a file for the authentication handler: `./utils/authentication.js`:
+21. ****replace****:
 
-27. ```javascript
+22. 
+
+    ```javascript
+    // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
+    app.use(middleware.swaggerMetadata());
+    ```
+
+23. now create a file for the authentication handler: `./utils/authentication.js`:
+
+24. ```javascript
     'use strict';
     
     var libjwt = require('jsonwebtoken');
@@ -930,9 +939,9 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     };
     ```
 
-28. Finally, we'll need to add the extra dependencies to your project. In a terminal, at the root directory:
+25. Finally, we'll need to add the extra dependencies to your project. In a terminal, at the root directory:
 
-29. ```bash
+26. ```bash
     npm install auth-header
     npm install jsonwebtoken
     npm install jwks-rsa
@@ -1210,17 +1219,11 @@ module.exports = function (user, context, cb) {
   
 ```
 
-#### **Summary on Hooks in Auth0**
-
-Hooks are a place in code that allows the developer to tap into a module (in this case custom code using node.js) which allows us to control what behaviour of the code or how it will react when a user interacts with it. Hooks are a way to augment or replace what current code is available.
-
-When using [Database Connections](https://auth0.com/docs/connections/database), Auth0 invokes the Hooks at runtime to execute custom logic.( reference: https://auth0.com/docs/hooks#extensibility-points)
-
 
 
 ### **Adding Rules**
 
-OAuth looks up the incoming scopes for the user attempting to login. If the user has the **scope** associated, it is added to the 'scope' property of the outgoing **JWT**.
+OAuth looks up the incoming scopes for the user attempting to login. If the user has the **scope** associated, it is added to the 'scope' property of the outgoing **JWT(JSON Web Token)**.
 
 At the moment, we assume that everybody who has an account will be granted the rights of '**consumer**' and '**member**'
 

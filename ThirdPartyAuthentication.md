@@ -349,7 +349,7 @@ This script also creates the `app.callbackState` module and configures the `call
 
 ```javascript
 const app = angular.module('starter', [
-    'auth0.auth0',
+    'auth0.auth0', // <- Add this as well
     'ui.router',
     'ngAnimate',
     'ui.bootstrap',
@@ -363,6 +363,12 @@ const app = angular.module('starter', [
     'app.adminState',
     'app.callbackState' // <- Add this to app.js
 ]);
+
+    app.config(function config(
+        $sceDelegateProvider,
+        $locationProvider,
+        angularAuth0Provider // <- Add this as well
+    )   {
 ```
 
 #### callback.html
@@ -543,10 +549,10 @@ For the service to work properly it needs to be configured. This is done by addi
 
 > Add the code in the snippet above into the `app.js` file in the `app.config()` function after the line `$locationProvider.html5Mode(true);`.
 
-We are also going to add some logic to the `app.run()` function in `app.js`. Replace it with the following version :
+We are also going to add some logic to the `.run()` function in `app.js`. Replace it with the following version :
 
 ```javascript
-app.run(function ($state, $rootScope, $transitions, authService) {
+.run(function ($state, $rootScope, $transitions, authService) {
 
     if (localStorage.getItem('isLoggedIn') === 'true') {
         authService.renewTokens();
@@ -563,7 +569,7 @@ app.run(function ($state, $rootScope, $transitions, authService) {
 });
 ```
 
-You may also want to change the name of the `auth0_variables.js` file to `client_variables.js` and fix the link to it in `index.html`.  After that replace the code in the file now called `client_variables.js` with the following code :
+Replace the code in the file now called `auth0-veriables.js` with the following code :
 
 ```javascript
 const CLIENT_CONFIG = {
@@ -618,8 +624,11 @@ Create a `404.html` file in the root directory of the SPWA and paste the followi
 ```
 
 > When serving from GitHub pages this `404.html` file will be served when Auth0 redirects after a login as the callback URL, in `client_variables.js`, points to a path that does not exist within our SPWA.
+> 
 > When the 404 page is served it will store the callback url (which will have the access token returned by Auth0 on it) into a property of the `sessionStorage` object and then it will redirect to the root of the SPWA immediately.
-> After the refirect happens, the next step in the logic of the auth service will execute a local login which will save the access token amongst a few other things that Auth0 returned to us after a login.
+> 
+> After the redirect happens, the next step in the logic of the auth service will execute a local login which will save the access token amongst a few other things that Auth0 returns to us after a login.
+> 
 > Then the SPWA transitions to the `callback` state. The `callback` state then redirects immediately to the `admin` state which is where we want the user to go if they have successfully authenticated.
 
 #### Protecting the access token
@@ -694,15 +703,39 @@ Add the following code beneath the `app.run()` function.
 ```javascript
   // This allows the nav links access to the authentication service,
   // in order to toggle the login and admin links based on whether the user has logged in.
-  app.controller('appCtrl', appCtrl);
-  appCtrl.$inject = ['authService'];
-  function appCtrl(
-    authSrvc
-  ) {
+  app.controller('appCtrl', ['authService', function appCtrl(authService) {
     let vm = angular.extend(this, {});
-    vm.auth = authSrvc;
+    vm.auth = authService;
     return vm;
-  }
+  }]);
+```
+
+### api.service.js
+
+Add the following lines of code into `api.service.js` :
+
+```javascript
+speciesSrvc.$inject = [
+    '$q',
+    '$timeout',
+    '$sce',
+    '$http',
+    'authService' // <- Add this line for both services in this file
+  ];
+  function speciesSrvc(
+    $q,
+    $timeout,
+    $sce,
+    $http,
+    authService  // <- Add this line for both services in this file
+  ) {
+    var service = {};
+
+    // Duplicate this line and comment out the original
+    // Then point to your locally running API server (probably on localhost:8080)
+    // Example : service.baseDbUrl = "http://localhost:8080/"
+    // Do this for both services in this file
+    service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
 ```
 
 Now it's time to run the SPWA locally, but before we do. We need to change the client variables to their localhost counterparts.

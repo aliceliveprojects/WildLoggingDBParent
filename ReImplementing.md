@@ -2,46 +2,6 @@
 
 This is part one of a set of scripts which take you through re-implementing an API.
 
-## Plan
-
-### Set up identity, tools and services
-
-1. Install VSCode
-1. Create a project identity
-1. Create a new, fresh GitHub repo. Clone it locally
-1. Create a Restlet Account 
-1. Create a Heroku account
-1. Create an app with a postgres instance, on Heroku
-1. Download and install the Omni DB database tool
-1. Examine the Open API (Swagger) tools 
-
-### Modify the API definition
-
-1. Examine the Urban Wild REST interface definition using Restlet Studio, and Swagger
-2. Remove all security definitions (for the time being)
-
-### Construct a skeleton NodeJS server 
-
-1. Use the Swagger tools to create a NodeJS server skeleton from the Urban Wild REST interface definition.
-2. Run the server locally
-
-### Create the database
-
-1. Use the DB tool to create a database schema suitable to hold the UrbanWild data.
-
-### Bind server to database
-
-1. Hook-up the local NodeJS server to the remote Postgres database.
-2. Implement the original functionality behind the interface
-3. Debug the RESTful interface using the Visual Studio Code HTTP plugins.
-
-### Deploy as a replacement service
-
-1. Deploy the local NodeJS server to Heroku, from this GitHub repo
-2. Change the location which the Urban Wild SPWA points to. Same interface, different location!
-
-# Here we go
-
 ## Install VSCode
 Microsoft Visual Studio Code is a ridiculously useful code editor, which comes with a debugger, compatible with NodeJS (amongst other things). It supports Windows, Linux and MacOS. You can install it [here](https://code.visualstudio.com/).
 
@@ -59,7 +19,7 @@ You can create a new fresh repo, on GitHub  if you're following along, or fork o
 
 ## Set-up RESTlet
 
-We use [Restlet Studio](https://studio.restlet.com/apis/local/info) for building an and editing REST API definitions.
+We use [**Restlet Studio**](https://studio.restlet.com/apis/local/info) for building an and editing REST API definitions.
 
 The Restlet API for urban wild is public.  
 The original account is available [here](https://cloud.restlet.com/apis/25850/versions/1/overview)  
@@ -81,7 +41,7 @@ The Restlet Studio UI is really good for visualising and building interface defi
 
 ## Swagger.io
 
-Swagger.io originally developed the Open API Specification. We like to use its [open source tools](https://swagger.io/tools/open-source/) for development, because we think they are more definitive. 
+Swagger.io originally developed the **Open API** Specification. We like to use its [open source tools](https://swagger.io/tools/open-source/) for development, because we think they are more definitive. 
 
 1. We used the [online version](https://editor.swagger.io/) of the Swagger Editor to visualise [our]([here](https://github.com/TheUrbanWild/WildLoggingDB/blob/master/documentation/restlet/swagger.yaml) ) REST Interface definition.
 
@@ -99,7 +59,11 @@ Security is a huge concern for anything that we do and to have such a trustable 
 
 ![heroku](./documentation/resources/heroku.png)
 
- Here's how we start-up our project with Heroku, and add a Postgres DB:
+ 
+
+### Summary
+
+Here's how we start-up our project with Heroku, and add a Postgres DB:
 
 1. We created a Heroku account, using the project email address.
 2. We used Heroku to create an app, using the European jurisdiction. (We called ours urbanwilddbapi
@@ -109,17 +73,19 @@ Security is a huge concern for anything that we do and to have such a trustable 
 6. The DATABASE URL is private, and should never be checked into a public repository, or allowed outside the project.
 7. Heroku has a number of tools which can be used to create local instances of the Database - but for this exercise, we will just use the remote DB.
 
-## Postgres tools
-We need a Postgres client which is free, and usable from any of the Uni computers.
 
-We're using [OmniDB](https://omnidb.org/index.php?option=com_content&view=category&layout=blog&id=12&Itemid=149&lang=en). 
+
+## Postgres tools
+We will need a Postgres client which is free, and usable from any of the Uni computers therefore [OmniDB](https://omnidb.org/index.php?option=com_content&view=category&layout=blog&id=12&Itemid=149&lang=en) will be the software of choice.
+
+
 This is a browser-based client. A web-based version is here: http://teampostgresql.herokuapp.com. If you're a student at MMU, use [these instructions](https://github.com/AliceDigitalLabs/SupportingLiveProjects_2018/wiki/Additional-Tools-from-Github#omnidb) and set-up OmniBD on your H: drive. You can then use it on any CMDT PC.
+
+
 
 ![omnidb](./documentation/resources/omnidb.png)
 
 In the pic above, OmniDB is directly editing our remote Postgres database (which is something done with **great caution!**)
-
-
 
 That's the tools. Let's have a look at the API definition.
 
@@ -157,19 +123,19 @@ adanac:WildLoggingDB coops$ npm --v
 
 1. Go to the  [Swagger editor](https://editor.swagger.io/) 
 
-2. Upload the YAML file
+2. Upload the **YAML** file
 
-3. Use the menu option: Generate Server, and choose: nodejs-server
+3. Use the menu option: **Generate Server**, and choose: **nodejs-server**
 
-4. The NodeJS code is downloaded as a .zip file.
+4. The NodeJS code is downloaded as a **.zip** file.
 
-5. Put zip file in the root folder of the repo, unzip, and then discard the .zip file.
+5. Put zip file in the **root folder of the repo**, **unzip**, and **then discard the .zip file.**
 
-6. Your directory will have a directory in it called `nodejs-server`. Take the contents of this directory out and paste into the root directory.
+6. Your directory will have a folder in it called `nodejs-server`. Take the contents of this directory out and paste into the root directory.
 
-7. Add a .gitignore file ([here](https://github.com/github/gitignore/blob/master/Node.gitignore)) (don't forget to make sure the name of the file is actually `.gitignore`). to the root directory.
+7. Add a **.gitignore** file ([here](https://github.com/github/gitignore/blob/master/Node.gitignore)) (don't forget to make sure the name of the file is actually `.gitignore`). to the root directory.
 
-8. Make a small change to the swagger.yaml file, in `<repo root>\api\swagger.yaml`. Make sure the following is set, near the top of the file:
+8. Make a small change to the **swagger.yaml** file, in `<repo root>\api\swagger.yaml`. Make sure the following is set, near the top of the file:
 
 9. ```yaml
    host: "localhost:8080"
@@ -177,13 +143,13 @@ adanac:WildLoggingDB coops$ npm --v
    - "http"
    ```
 
-10. Make sure you are connected to the internet. Open a terminal in the root directory, and type
+10. Make sure you are connected to the internet. Open a **terminal in the root directory**, and type
 
 11. ```bash
     npm start
     ```
 
-12. This is an instruction to the node package manager to download all the dependencies of the application, and then start Node:
+12. This is an instruction to the **node package manager** to download all the dependencies of the application, and then start Node:
 
 13. ```bash
     > theurbanwild@1.6.0 prestart /Users/coops/Documents/projects/WildLoggingDB/code
@@ -206,22 +172,22 @@ adanac:WildLoggingDB coops$ npm --v
 
 16. The swagger UI is available at `http://localhost:8080/docs`
 
-17. Try some of the functions. You find the swagger UI page sends an HTTP request to the service via the REST API, and gets some canned data back.
+17. Try some of the functions. You find the **swagger UI** page sends an HTTP request to the **service via the REST API**, and gets some canned data back.
 
 18. Once you're at this point, you can check in your changes.
 
 ## Deploy to Heroku
 
-While we're here, it's a good idea to explore deployment to Heroku; the app has only just been generated, so there's nothing there to confuse if something goes wrong.
+While we're here, it's a good idea to explore **deployment to Heroku**; the app has only just been generated, so there's nothing there to confuse if something goes wrong.
 
 Heroku is a fantastic resource - but there are a couple of things we need to do to the app to make it play nicely:
 
-1. Configure the app to listen on the HTTP port which Heroku gives it.
-2. Configure the Swagger UI to make calls to the deployed REST interface, not localhost.
+1. Configure the app to listen on the **HTTP port** which Heroku gives it.
+2. Configure the **Swagger UI to make calls to the deployed REST interface**, not localhost.
 
 ### Ports
 
-Heroku is a gigantic container service, running millions of services in a virtualised environment. To do this, it  gives each app an automatic domain name, <yourappname>.herokuapp.com, and a `port` and routes all incoming traffic to your app, via that. 
+Heroku is a **gigantic container service**, running millions of services in a virtualised environment. To do this, it  gives each app an automatic domain name, <yourappname>.herokuapp.com, and a `port` and routes all incoming traffic to your app, via that. 
 
 If it wants to get this traffic, our service must listen on that port. 
 
@@ -267,23 +233,23 @@ Heroku has a nice way of connecting your app to your GitHub repo, so you can bui
 
 1. **Make sure you have checked in your earlier changes!**
 
-2. Login to your Heroku account, with your project identity, and go to the 'deploy' tab:
+2. Login to your Heroku account, with your project identity, and go to the **'deploy'** tab:
 
 3. ![heroku deploy 1](./documentation/resources/heroku_deploy_1.png)
 
-4. Choose 'connect to GitHub'. This happens:
+4. **Choose 'connect to GitHub'**. This happens:
 
 5. ![heroku deploy 2](./documentation/resources/heroku_deploy_2.png)
 
-6. Choose 'connect to GitHub' again, to confirm. This happens:
+6. **Choose 'connect to GitHub'** again, to confirm. This happens:
 
 7. ![heroku deploy 3](./documentation/resources/heroku_deploy_3.png)
 
-8. Fill-in the GitHub details for the account owning your repo, and sign-in. This now happens:
+8. Fill-in the GitHub details **for the account owning your repo, and sign-in**. This now happens:
 
 9. ![heroku deploy 4](./documentation/resources/heroku_deploy_4.png)
 
-10. The left hand chooser is populated with all the GitHub personas which your login information gives you access to. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called 'TheUrbanWild' for which we have admin access, and we called it 'WildLoggingDB'. Yours may be different.
+10. The left hand chooser is populated with all the GitHub personas which your login information gives you access to. The right hand search box allows you to search for repositories under that persona. Our repo is under an organisation called **'TheUrbanWild'** for which we have admin access, and we called it **'WildLoggingDB'**. **Yours may be different**.
 
 11. You need admin access on a repo to grant permission for Heroku to connect to it.
 
@@ -483,9 +449,9 @@ Add the following files (shown in green) to your project:
 
 #### stall.js
 
-One of the best things to come out of NodeJS v8 was the implicit use of Promises in the language, with the keywords `async` and `await` , which encapsulate the concept of asynchronous code - code which runs independently of the main thread.
+One of the best things to come out of **NodeJS v8** was the implicit use of Promises in the language, with the keywords `async` and `await` , which encapsulate the concept of asynchronous code - code which runs independently of the main thread.
 
-The swagger-generated skeleton supports pre-Node 8, and so uses the legacy  Promise class. We want to be able to use the swagger code with the minimum of alteration, so we won't mess about with it too much. However, we want to use the latest language additions in any new code we write, so that we take advantage of the enhanced readability.
+The swagger-generated skeleton supports pre-Node 8, and therefore uses the **legacy Promise class**. We want to be able to use the swagger code with the minimum of alteration, so we won't mess about with it too much. However, we want to use the latest language additions in any new code we write, so that we take advantage of the enhanced readability.
 
 Stall.js simply allows us to create a dummy asynchronous function, which resolves (runs) after a specified time, and lets us test our services.
 
@@ -562,7 +528,7 @@ module.exports = {
 
 #### database.js
 
-This file is going to provide us with the implement of the REST interface, at the database level. 
+This file is going to provide us with the implementation of the **REST interface**, at the database level. 
 
 At the moment, we're just going to add all the required dependencies, and test it, using  'stall' to represent an asynchronous call into the DB.
 
@@ -632,9 +598,9 @@ var getEvents = async function(id, date, lat, lon, postcode, thing, $page, $size
 
 You'll see we export:
 
-* initialise: initialises the database connection and a pool of clients.
-* errors: an object which defines all errors which are supported
-* getEvents: function to do a database search - right now it's running  the dummy test function
+* **Initialise**: initialises the database connection and a pool of clients.
+* **Errors**: an object which defines all errors which are supported
+* **getEvents**: function to do a database search - right now it's running  the dummy test function
 
 #### Changes to swagger-generated skeleton code
 
@@ -666,7 +632,7 @@ exports.getEvents = function($page,lat,lon,date,id,$size,postcode,thing,$sort) {
 }
 ```
 
-we're calling the `database.getEvents` function, here, as it would be called, but we've put some extra code in, to handle errors. One thing we want to handle properly is the way sql errors are reported. We're clobbering those and removing the detail.
+we're calling the `database.getEvents` function, here, as it would be called, but we've put some extra code in, to handle errors. One thing we want to handle properly is the way **sql errors are reported**. We're clobbering those and removing the detail.
 
 ##### Wildlifelog.js
 
@@ -703,7 +669,7 @@ module.exports.getEvents =  function getEvents (req, res, next) {
 
 ##### Index.js
 
-Finally, we're going to initialise the database service in the index.js:
+Finally, we're going to initialise the database service in the **index.js:**
 
 ```javascript
 'use strict';
@@ -795,7 +761,7 @@ You can set up debugging, by creating a  `.vscode` directory in your project's r
             "name": "Launch Program",
             "program": "${workspaceFolder}/index.js",
             "env": {
-                "DATABASE_URL":"postgres://fljsdlfjsdsdfdssd:lalalalalalalalalalalalalalalalalalalalalala@ec2-99-999-99-999.eu-west-1.compute.amazonaws.com:5432/kgerwkgergergreger"
+                "DATABASE_URL":"postgres://TERMINAL_USERNAME@127.0.0.1:5432/HEROKU_DATABASE_NAME"
             }
         }
     ]
@@ -818,7 +784,7 @@ Once you have created the file you should be able to set breakpoints in the serv
 
 ## Hook up the database
 
-Now we're going to create a query which will perform a search of the database. 
+Now we're going to **create a query** which will perform a **search of the database**. 
 
 We've made a change to the `database.js` file's `getEvents` function:
 
@@ -892,9 +858,9 @@ var getEvents = async function(id, date, lat, lon, postcode, thing, $page, $size
 
 
 
-It's a quick and dirty implementation, to illustrate the creation of the dynamic search query, but it fully implements the behaviour we're looking for.
+It's a quick and dirty implementation, to illustrate the creation of the **dynamic search query**, but it fully implements the behaviour we're looking for.
 
-We're going to do the same sort of thing to implement all the other REST endpoints. 
+We're going to do the same sort of thing to implement all the **other REST endpoints.** 
 
 We now have 2 releases, which are tagged in the source code:
 
@@ -917,7 +883,7 @@ While testing, the following changes needed to be made to the REST service, so i
 
 ### CORS
 
-We needed to add Cross Origin Request Support
+We need to **add Cross Origin Request Support**
 
 1. on the command-line / terminal at the root of the REST service project:
 
@@ -925,7 +891,7 @@ We needed to add Cross Origin Request Support
    npm install cors
    ```
 
-3. then the following code gets added to `index.js`
+3. then the following code gets **added to index.js**
 
 4. ```javascript
    var cors = require('cors');
