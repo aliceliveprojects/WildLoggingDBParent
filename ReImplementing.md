@@ -59,14 +59,14 @@ You can create a new fresh repo, on GitHub  if you're following along, or fork o
 
 ## Set-up RESTlet
 
-We use Restlet Studio for building an and editing REST API definitions.
+We use [Restlet Studio](https://studio.restlet.com/apis/local/info) for building an and editing REST API definitions.
 
 The Restlet API for urban wild is public.  
 The original account is available [here](https://cloud.restlet.com/apis/25850/versions/1/overview)  
 The REST API definition is [here](https://cloud.restlet.com/api/apis/25850/versions/1/swagger2?media=json), and copied to this repo [here](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/documentation/restlet/swagger.yaml)  
 Now we have the definition of the interface, to use in this project. Note: RESTlet's UI is the best for creating interfaces. Well worth getting an account and using it.
 
-1. We created a RESTlet account for the porject identity
+1. We created a RESTlet account for the project identity
 
 2. We imported the REST API definition into the Restlet Studio Tool, to take a look:
 
@@ -75,7 +75,7 @@ Now we have the definition of the interface, to use in this project. Note: RESTl
    ![here](./documentation/resources/restlet_api_def.png)
 
 
-All is nicely laid-out, with end points for resources, verbs for the http operations, and defintions for the data which will be handled. 
+All is nicely laid-out, with end points for resources, verbs for the http operations, and definitions for the data which will be handled. 
 
 The Restlet Studio UI is really good for visualising and building interface definitions, but once we're happy with them, we like to use the original swagger tools to validate them and construct skeleton servers.
 
@@ -105,7 +105,7 @@ Security is a huge concern for anything that we do and to have such a trustable 
 2. We used Heroku to create an app, using the European jurisdiction. (We called ours urbanwilddbapi
 3. In Heroku, we used the 'Elements' menu item to add a free Heroku Postgres instance. (Hobby Dev)
 4. In the app's Settings, the 'Reveal Config Vars' button shows we have a DATABASE_URL
-5. The DATABASE_URL is a [Postgres URL](https://stackoverflow.com/questions/3582552/postgresql-connection-url) which points to the Postgres dabase instance on Amazon's AWS infrastructure.
+5. The DATABASE_URL is a [Postgres URL](https://stackoverflow.com/questions/3582552/postgresql-connection-url) which points to the Postgres database instance on Amazon's AWS infrastructure.
 6. The DATABASE URL is private, and should never be checked into a public repository, or allowed outside the project.
 7. Heroku has a number of tools which can be used to create local instances of the Database - but for this exercise, we will just use the remote DB.
 
@@ -129,9 +129,9 @@ That's the tools. Let's have a look at the API definition.
 
 We're going to remove all authentication from the interface for the time being - right now, the API and the data which it fronts will be open. In later exercises, we'll add authentication properly.
 
-1. In RESTlet studio, change the attribution (name, contact details, etc) of the API.
+1. In SwaggerIO, change the attribution (name, contact details, etc) of the API.
 
-2. Change the base URL to reflect the new Heroku app we created.
+2. Change the host URL to reflect the new Heroku app we created.
 
 3. Remove the security schemes from the API
 
