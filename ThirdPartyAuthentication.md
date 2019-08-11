@@ -6,7 +6,7 @@ This script takes you through adding **Third-Party authentication** to the API w
 
 First Party Authentication means that we will only grant access to the authenticated parts of the API to a SPWA which has been **served from the same domain as the API**. In this case, that means the **SwaggerUI** you developed in the last script.
 
-Because of Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . 
+Due to Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . 
 
 To do that, we need to enable the Auth0 account, and we need to add some authentication smarts to the SPWA.
 
@@ -121,7 +121,7 @@ You should see the following in the applications page on the Auth0 website :
 
 By default, a third party app's signing algorithm is HS256 but we want RS256 so that we can authenticate using the RSA endpoint.
 
-To change this, find the third party application in the Applications page on the Auth0 website and scroll down until you see a **Show Advanced Settings** button (just above the **Save Changes** button) like in the following image :
+To change this, find the third party application in the Applications page on the Auth0 website and scr oll down until you see a **Show Advanced Settings** button (just above the **Save Changes** button) like in the following image :
 
 ![auth0_change_signing_algorithm_1](./documentation/resources/auth0_change_signing_algorithm_1.png)
 
@@ -153,8 +153,6 @@ Firstly you need to get the **Username-Password-Authentication** Database Connec
 
 ![auth0_promote_connections_3](./documentation/resources/auth0_promote_connections_3.png)
 
-> If you can't find this endpoint add the following document fragment (#something) onto the end of the URL in the Management API SPWA that you just gave your API token to: `#!/Connections/get_connections`
-
 ![auth0_promote_connections_3](./documentation/resources/auth0_promote_connections_4.png)
 
 Then press the **TRY** button
@@ -184,7 +182,7 @@ If the `"is_domain_connection"` field is set to `true` then **SUCCESS!**. We hav
 
 ### Making a small change to the Hosted Login Page
 
-Go to the following url after substituting your tenant name into it :
+Go to the following URL after substituting your tenant name into it :
 
 > manage.auth0.com/dashboard/eu/<YOUR_TENANT_NAME>/login_page
 
@@ -371,6 +369,8 @@ const app = angular.module('starter', [
     )   {
 ```
 
+> The extra lines (`'auth0.auth0'` and `'angularAuth0Provider'`)
+
 #### callback.html
 
 ```html
@@ -398,7 +398,7 @@ Replace the `button` element with the following :
 <button ng-if="vm.auth.isAuthenticated()" ng-click="vm.auth.logout()" class="btn btn-primary">LOGOUT</button>
 ```
 
-> The `ng-if` and `ng-click`directives need there to be a property called `auth` on the controller object (`vm`), so that it can call the apprpriate methods to log the user in or out; as well as display the correct button depending on wheter the user is logged in or out.
+> The `ng-if` and `ng-click`directives need there to be a property called `auth` on the controller object (`vm`), so that it can call the appropriate methods to log the user in or out; as well as display the correct button depending on whether the user is logged in or out.
 >
 > We should add a reference to the authentication service in our controller function.
 
@@ -569,7 +569,7 @@ We are also going to add some logic to the `.run()` function in `app.js`. Replac
 });
 ```
 
-Replace the code in the file now called `auth0-veriables.js` with the following code :
+Replace the code in the file now called `auth0-variables.js` with the following code :
 
 ```javascript
 const CLIENT_CONFIG = {
@@ -623,17 +623,19 @@ Create a `404.html` file in the root directory of the SPWA and paste the followi
 </html>
 ```
 
-> When serving from GitHub pages this `404.html` file will be served when Auth0 redirects after a login as the callback URL, in `client_variables.js`, points to a path that does not exist within our SPWA.
+> When serving from GitHub pages this `404.html` file will be served when Auth0 redirects after a login, as the callback URL, in `auth0-variables.js`, points to a path that does not exist within our SPWA.
 > 
-> When the 404 page is served it will store the callback url (which will have the access token returned by Auth0 on it) into a property of the `sessionStorage` object and then it will redirect to the root of the SPWA immediately.
+> When the 404 page is served it will store the callback url (which will have the access token returned by Auth0 on it) into the `redirect` property of the `sessionStorage` object (available to access through the `window` object e.g. `window.sessionStorage.redirect = "accessToken=iuo124l981yqly19yquet..."`) and then it will redirect to the root of the SPWA immediately.
 > 
-> After the redirect happens, the next step in the logic of the auth service will execute a local login which will save the access token amongst a few other things that Auth0 returns to us after a login.
+> After the redirect happens, the next step in the logic of the authentication service will execute a local login which will save the access token amongst a few other things that Auth0 returns to us after a login.
 > 
 > Then the SPWA transitions to the `callback` state. The `callback` state then redirects immediately to the `admin` state which is where we want the user to go if they have successfully authenticated.
+> 
+> The extra step of transitioning to the callback state is to get rid of a `#` at the end of the URL which is leftover from when the authentication service parses the access token.
 
 #### Protecting the access token
 
-The access token returned by Auth0 is needed to successfully make requests to the API. After the SPWA's authentication service has got a hold of it, as well as the other things that are sent back with it, it needs to be deleted. This is done in the `index.html` file as we have set our redirect in the `404.html` file to be WildLoggingAndAdmin/ which is the base URL of the SPWA.
+The access token returned by Auth0 is needed to successfully make requests to the API. After the SPWA's authentication service has got a hold of it, as well as the other things that are sent back with it, it needs to be **deleted**. This is done in the `index.html` file as we have set our redirect in the `404.html` file to be WildLoggingAndAdmin/ which is the base URL of the SPWA.
 
 ### index.html
 
@@ -692,7 +694,7 @@ The access token returned by Auth0 is needed to successfully make requests to th
 </body>
 ```
 
-> Replace your `index.html` file's body element with the one above. We have added a button that takes you directly to the admin state, but only if you have logged in. We have also added  buttons that are very similar to the buttons on the login page of the SPWA, where the login and logout buttons are only displayed based on whether the user has logged in or not.
+> Replace your `index.html` file's body element with the one above. We have added a button that takes you directly to the admin state, but only if you have logged in. We have also added buttons to the header that are very similar to the buttons on the login page, where the login and logout buttons are only displayed based on whether the user has logged in or not.
 
 There are also some changes that need to be made to app.js for the changes in index.html to work properly.
 
@@ -703,7 +705,7 @@ Add the following code beneath the `app.run()` function.
 ```javascript
   // This allows the nav links access to the authentication service,
   // in order to toggle the login and admin links based on whether the user has logged in.
-  app.controller('appCtrl', ['authService', function appCtrl(authService) {
+  .controller('appCtrl', ['authService', function appCtrl(authService) {
     let vm = angular.extend(this, {});
     vm.auth = authService;
     return vm;
@@ -730,36 +732,70 @@ speciesSrvc.$inject = [
     authService  // <- Add this line for both services in this file
   ) {
     var service = {};
+```
 
-    // Duplicate this line and comment out the original
-    // Then point to your locally running API server (probably on localhost:8080)
-    // Example : service.baseDbUrl = "http://localhost:8080/"
-    // Do this for both services in this file
-    service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+#### Another change to `api.service.js`
+
+Change `service.baseDbUrl` to point to your locally running API as shown in the following code snippet :
+
+```javascript
+// Do this for both services in api.service.js
+// service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+service.baseDbUrl = "http://localhost:8080/";
+```
+
+#### Final change to `api.service.js`
+
+We currently do not pass the access token we get from Auth0 to the API when we make requests to the endpoints that require authentication. To fix this find the following methods and replace them with the examples below:
+
+```javascript
+service.deleteSpecies = function deleteSpecies(speciesID) {
+  return($http({
+    method: "DELETE",
+    url: service.baseDbUrl + "things/" + speciesID,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + authService.getAccessToken()
+    }
+  }));
+}
+```
+
+```javascript
+service.deleteSightings = function deleteSightings(sightingsID) {
+  return($http({
+    method: "DELETE",
+    url: service.baseDbUrl + "events/" + sightingsID,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + authService.getAccessToken()
+    }
+  }));
+}
 ```
 
 Now it's time to run the SPWA locally, but before we do. We need to change the client variables to their localhost counterparts.
 
-Your `client_variables.js` file should look like the following :
+Your `auth0-variables.js` file should look like the following :
 
 ```javascript
 const CLIENT_CONFIG = {
-  "AUTH0_CLIENT_ID":"QwJzw4L3z3b0DKzdoPa1CMW4106iBIak",
-  "AUTH0_DOMAIN":"urbanwild.eu.auth0.com",
+  "AUTH0_CLIENT_ID":"<YOUR_THIRD_PARTY_SPWA_CLIENT_ID_FROM_AUTH0>",
+  "AUTH0_DOMAIN":"<YOUR_AUTH0_DOMAIN>",
 
-  // "AUTH0_CALLBACK_URL":"https://aliceliveprojects.github.io/WildLoggingAndAdmin/admin/auth",
+  // "AUTH0_CALLBACK_URL":"https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth",
   "AUTH0_CALLBACK_URL":"http://localhost:5500/#/admin/auth",
   
   // "APP_SCHEME": "https", 
   "APP_SCHEME": "http", 
 
-  // "APP_DOMAIN": "aliceliveprojects.github.io", 
+  // "APP_DOMAIN": "<YOUR_GITHUB_USERNAME>.github.io", 
   "APP_DOMAIN": "localhost", 
 
   // "APP_PORT": "443", 
   "APP_PORT": "5501",
 
-  "AUTH0_AUDIENCE": "https://www.urbanwild/wildloggingadmin",
+  "AUTH0_AUDIENCE": "<YOUR_AUTH0_API_AUDIENCE>",
   "AUTH0_REQUESTED_SCOPES": "admin" 
 };
 ```
