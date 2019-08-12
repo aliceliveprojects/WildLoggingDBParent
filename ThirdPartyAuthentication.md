@@ -2,7 +2,7 @@
 
 ## Overview
 
-This script takes you through adding **Third-Party authentication** to the API which you have already enabled for First-Party authentication.
+This script takes you through implementing **Third-Party authentication** to the API which you have already enabled for First-Party authentication.
 
 First Party Authentication means that we will only grant access to the authenticated parts of the API to a SPWA which has been **served from the same domain as the API**. In this case, that means the **SwaggerUI** you developed in the last script.
 
@@ -290,17 +290,91 @@ Download [this release](https://github.com/aliceliveprojects/WildLoggingAndAdmin
 
 Open the downloaded SPWA in VSCode. You should see a directory structure that looks like the following :
 
-
-
 ![third_party_spwa_1](./documentation/resources/third_party_spwa_1.png)
 
+### Running the SPWA locally
 
+To run the SPWA locally it is a good idea to have the Visual Studio Code extension, [live-server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), installed. Once installed we can simply right click on the `index.html` file in the project and serve our **Single Page Web App** (SPWA) from a `localhost` server (running on port 5500 by default).
+
+Once you have run it, you will realize that there are **many errors popping up**. This is _because of some code that is needed to help an AngularJS SPWA function properly_ when served from GitHub Pages. **Commenting out these lines of code will make the SPWA run properly on `localhost`**
+
+The following code snippets show what lines to comment out and which files they are in :
+
+#### index.html
+
+```html
+<title>The Urban Wild</title>
+<base href="/WildLoggingAndAdmin/"> <!-- Comment out this line -->
+<link rel="manifest" href="manifest.json"> <!-- Comment out or delete this line too as we don't have a manifest.json file to link -->
+```
+
+#### app.js
+
+```javascript
+$locationProvider.hashPrefix('');
+
+/// Comment out the line below to run the app
+// without HTML5 mode (will use hashes in routes)
+$locationProvider.html5Mode(true);
+```
+
+The following change doesn't need to be made to run the SPWA locally, but it is a _good idea to point our SPWA to a **locally running version of our API** which is pointed at our **local instance of the database**_.
+
+> This way we can inspect the database and API, in case any problems or bugs arise, to help us fix said problems and bugs.
+
+#### api.service.js
+
+Change this :
+
+```javascript
+var service = {};
+
+service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+service.corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
+```
+
+to this :
+
+```javascript
+var service = {};
+
+// service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+service.baseDbUrl = "http://localhost:8080/";
+service.corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
+```
+
+> There are two services inside of  the `api.service.js` file. We need to change the `service.baseDbUrl` for both of them. In order to do that, once you have made the change described above, change this (further down in the file) : 
+
+```javascript
+var service = {};
+
+service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+
+service.getSightingsByName = function getSightingsByName(sightingsPostcode, pageSize, pageNum) {
+```
+
+to this:
+
+```javascript
+var service = {};
+
+// service.baseDbUrl = "https://urbanwilddbapi.herokuapp.com/";
+service.baseDbUrl = "http://localhost:8080/";
+
+service.getSightingsByName = function getSightingsByName(sightingsPostcode, pageSize, pageNum) {
+```
+
+Now if you check your browser, the SPWA should be running and it should look like this :
+
+![third_party_spwa_2](./documentation/resources/third_party_spwa_2.png)
+
+### Setting up to add authentication to the SPWA
 
 We are going to add a new `callback` state to our application. In order to comply with the established directory structure, make a directory called "callback" inside of the folder "state".
 
 
 
-![third_party_spwa_2](./documentation/resources/third_party_spwa_2.png)
+![third_party_spwa_3](./documentation/resources/third_party_spwa_3.png)
 
 
 
@@ -347,7 +421,7 @@ This script also creates the `app.callbackState` module and configures the `call
 
 ```javascript
 const app = angular.module('starter', [
-    'auth0.auth0', // <- Add this as well
+    'auth0.auth0', // <- Whilst we are here, may as well add this.
     'ui.router',
     'ngAnimate',
     'ui.bootstrap',
@@ -365,11 +439,13 @@ const app = angular.module('starter', [
     app.config(function config(
         $sceDelegateProvider,
         $locationProvider,
-        angularAuth0Provider // <- Add this as well
+        angularAuth0Provider // <- May as well add this too.
     )   {
 ```
 
-> The extra lines (`'auth0.auth0'` and `'angularAuth0Provider'`)
+> The extra lines (`'auth0.auth0'` and `'angularAuth0Provider'`) are added for use later.
+>
+> The `auth0.auth0` line and the `angularAuth0Provider` line basically tells AngularJS that our application depends on the module (`auth0.auth0`) and the provider (`angularAuth0Provider`) given to us by the `angular-auth0.js` library that we have linked in our `index.html` file's `head` element.
 
 #### callback.html
 
@@ -432,11 +508,15 @@ Replace the `button` element with the following :
 })();
 ```
 
-> Your login controller logic should look like the logic above.
+> Your login controller logic should look like the logic above once you have finished making the changes.
+
+**Where does this `authService` thing come from??** It doesn't come from anywhere so we have to create it. Here's how . . .
 
 ### Creating the Authentication Service
 
-Create a new JavaScript file in the `services` folder. We've called ours `auth.service.js` but you can call it something else if you want to as long as you **link to the script in the index.html** with the **same name**.
+Create a new JavaScript file in the `services` folder. We've called ours `auth.service.js` but you can call it something else if you want to as long as you **link to the script in the index.html file** with the **same name**.
+
+> E.g. `<script type="text/javascript" src="scripts/services/auth.service.js"></script>`
 
 Once the file has been created, paste the following code into the file.
 
@@ -537,17 +617,17 @@ Once the file has been created, paste the following code into the file.
 For the service to work properly it needs to be configured. This is done by adding the following into the `app.js` file :
 
 ```javascript
-    angularAuth0Provider.init({
-        clientID: CLIENT_CONFIG.AUTH0_CLIENT_ID,
-        domain: CLIENT_CONFIG.AUTH0_DOMAIN,
-        responseType: 'token id_token',
-        redirectUri: CLIENT_CONFIG.AUTH0_CALLBACK_URL,
-        scope: CLIENT_CONFIG.AUTH0_REQUESTED_SCOPES,
-        audience: CLIENT_CONFIG.AUTH0_AUDIENCE
-    });
+angularAuth0Provider.init({
+  clientID: CLIENT_CONFIG.AUTH0_CLIENT_ID,
+  domain: CLIENT_CONFIG.AUTH0_DOMAIN,
+  responseType: 'token id_token',
+  redirectUri: CLIENT_CONFIG.AUTH0_CALLBACK_URL,
+  scope: CLIENT_CONFIG.AUTH0_REQUESTED_SCOPES,
+  audience: CLIENT_CONFIG.AUTH0_AUDIENCE
+});
 ```
 
-> Add the code in the snippet above into the `app.js` file in the `app.config()` function after the line `$locationProvider.html5Mode(true);`.
+> Add the code in the snippet above into the `app.js` file in the `.config()` function after the line `$locationProvider.html5Mode(true);`.
 
 We are also going to add some logic to the `.run()` function in `app.js`. Replace it with the following version :
 
@@ -569,7 +649,7 @@ We are also going to add some logic to the `.run()` function in `app.js`. Replac
 });
 ```
 
-Replace the code in the file now called `auth0-variables.js` with the following code :
+Replace the code in the file called `auth0-variables.js` with the following code :
 
 ```javascript
 const CLIENT_CONFIG = {
@@ -592,6 +672,8 @@ const CLIENT_CONFIG = {
   "AUTH0_REQUESTED_SCOPES": "admin" 
 };
 ```
+
+> Remember to substitute in your details in the marked areas ( <> ).
 
 ### Handling 404 redirects
 
@@ -635,7 +717,7 @@ Create a `404.html` file in the root directory of the SPWA and paste the followi
 
 #### Protecting the access token
 
-The access token returned by Auth0 is needed to successfully make requests to the API. After the SPWA's authentication service has got a hold of it, as well as the other things that are sent back with it, it needs to be **deleted**. This is done in the `index.html` file as we have set our redirect in the `404.html` file to be WildLoggingAndAdmin/ which is the base URL of the SPWA.
+The access token returned by Auth0 is needed to successfully make requests to the API. After the SPWA's authentication service has got a hold of it, as well as the other things that are sent back with it, it needs to be **deleted**. This is done in the `index.html` file as we have set our redirect in the `404.html` file to be `0;URL='/WildLoggingAndAdmin/'` which is the base URL of the SPWA.
 
 ### index.html
 
@@ -700,17 +782,17 @@ There are also some changes that need to be made to app.js for the changes in in
 
 ### app.js
 
-Add the following code beneath the `app.run()` function.
+Add the following code beneath the `.run()` function.
 
 ```javascript
-  // This allows the nav links access to the authentication service,
-  // in order to toggle the login and admin links based on whether the user has logged in.
-  .controller('appCtrl', ['authService', function appCtrl(authService) {
-    let vm = angular.extend(this, {});
-    vm.auth = authService;
-    return vm;
-  }]);
+.controller('appCtrl', ['authService', function appCtrl(authService) {
+  let vm = angular.extend(this, {});
+  vm.auth = authService;
+  return vm;
+}]);
 ```
+
+> This allows the nav links access to the authentication service, in order to toggle the login and admin links based on whether the user has logged in.
 
 ### api.service.js
 
@@ -736,7 +818,7 @@ speciesSrvc.$inject = [
 
 #### Another change to `api.service.js`
 
-Change `service.baseDbUrl` to point to your locally running API as shown in the following code snippet :
+Change `service.baseDbUrl` to point to your locally running API, if you haven't already, as shown in the following code snippet :
 
 ```javascript
 // Do this for both services in api.service.js
@@ -807,3 +889,13 @@ const CLIENT_CONFIG = {
 | SPWA                                                         | REST API                                                     |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
 | [Third Party Authentication Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported) | [Authenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/authentication_supported_updated_scope_check) |
+
+> See the deployed SPWA [here](https://aliceliveprojects.github.io/WildLoggingAndAdmin).
+>
+> It is a good idea to try out the deployed SPWA in an incognito window, so that the browser doesn't try to log in with the credentials of a user on your tenant, because it has saved the login details in cookies or something along those lines.
+>
+> Signing up is disabled so you will have to sign into Auth0 with an example user that we have created on our tenant who has the required "admin" scope.
+>
+> | Username | Password |
+> | -------- | -------- |
+> | wildloggingex@gmail.com | !wildlogging99? |
