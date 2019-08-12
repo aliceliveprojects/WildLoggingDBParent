@@ -87,7 +87,7 @@ Enabling the OIDC Dynamic Application Registration will allow us to add a third 
 curl --request POST \
 --url 'https://<YOUR_TENANT_DOMAIN>/oidc/register' \
 --header 'content-type: application/json' \
---data '{"client_name":"<NAME_YOUR_THIRD_PARTY_APPLICATION>","redirect_uris": ["https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth/", "http://localhost:5500/#/admin/auth/"]}'
+--data '{"client_name":"<NAME_YOUR_THIRD_PARTY_APPLICATION>","redirect_uris": ["https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth", "http://localhost:5500/#/admin/auth"]}'
 ```
 
 Then paste your modified cURL request into the terminal and hit enter.
@@ -100,8 +100,8 @@ Then paste your modified cURL request into the terminal and hit enter.
   "client_id":"<YOUR_THIRD_PARTY_APP'S_CLIENT_ID>",
   "client_secret":"LALALALALALALALALAIMNOTTELLING",
   "redirect_uris":[
-    "https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin",
-    "http://localhost:5500/#/admin"
+    "https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth",
+    "http://localhost:5500/#/admin/auth"
   ],
   "client_secret_expires_at":0
 }
