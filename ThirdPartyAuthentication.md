@@ -135,7 +135,7 @@ Now our JSON Web Tokens (JWTs) will be signed with the algorithm that we expect 
 
 To complete enabling of third party applications we need to **promote** the connections our third party app will use to **domain-level connections**.
 
-To do this we will need to use the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections). **However** ... the management API needs the API token of the API that you created by following the previous guide. You can get this token by using an API explorer [here](https://manage.auth0.com/#/apis/management/explorer). Once you have copied the API token. Go back to the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections) and do the following :
+To do this we will need to use the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections). **However** ... the management API needs the API token of the **Auth0 Management API**, which is a **System API** that is created when you create a tenant, in your dashboard under the section called **APIS**. You can get this token by using an API explorer [here](https://manage.auth0.com/#/apis/management/explorer). Once you have copied the API token. Go back to the [Management API](https://auth0.com/docs/api/management/v2#!/Connections/get_connections) and do the following :
 
 ![auth0_promote_connections_1](./documentation/resources/auth0_promote_connections_1.png)
 
@@ -179,6 +179,62 @@ The response should look something like the following:
 ![auth0_promote_connections_7](./documentation/resources/auth0_promote_connections_7.png)
 
 If the `"is_domain_connection"` field is set to `true` then **SUCCESS!**. We have successfully promoted our database connection. :)
+
+### Creating a user and giving them scopes
+
+When we test our SPWA, we are going to need a test user to login with. This user will be given the `admin` scope and will act as an administrator for our SPWA who can go to the SPWA, login (because they were given admin scope) and perform DELETE and PUT requests to our API.
+
+Before you create the user, make sure that you have setup [Hooks](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/Authentication.md#adding-hooks) and [Rules](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/Authentication.md#adding-rules) from the [previous guide](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/Authentication.md).
+
+By following the previous guide, you should have already created a user when you initially signed up to the API, before disabling Sign Up in the Auth0 dashboard.
+
+If you have already created a user, **check** that they have an **`allocated_scopes` property** as shown below.
+
+> **If they don't, delete that user and create them again or just create a new user altogether**.
+
+What is important, is that a user is created because the **Hook** that we setup in the previous guide, is **executed on pre-registration**, and we want that **Hook** to execute and give the user we create an `allocated_scopes` property on their `app_metadata`.
+
+**Once done, you should see the following in the user's details section :**
+
+![auth0_create_admin_user_1](./documentation/resources/auth0_create_admin_user_1.png)
+
+> The `allocated_scopes` property should be an empty array
+
+**Now we are going to give the user you created, the `admin` scope.**
+
+We are going to do this through a PATCH request to the [Management API](https://auth0.com/docs/api/management/v2#!/Users/patch_users_by_id). This is the same as before because you need to get the API token of your **Auth0 Management API** and give it to the SPWA that Auth0 provides to make all kinds of requests that will do all kinds of things, including updating a user's `app_metadata`.
+
+First we need to get the user's ID. To do this we need to go to [here](https://auth0.com/docs/api/management/v2#!/Users/get_users) and make a request to get all the users on our tenant :
+
+![auth0_create_admin_user_2](./documentation/resources/auth0_create_admin_user_2.png)
+
+> Make sure to set the API token (which you can get from [here](https://manage.auth0.com/#/apis/management/explorer))
+
+Once you have set the API token and made the request, you need to find the user in the response and copy their ID :
+
+![auth0_create_admin_user_3.png](./documentation/resources/auth0_create_admin_user_3.png)
+
+Once you have the `user_id`, you need to go to the Update a user endpoint on the same page either by finding it on the list of endpoints in the navigation pane to the left of the SPWA or by replacing the document fragment (bit after the # at the end of a URL) in the URL with `!/Users/patch_users_by_id`.
+
+> If you've found the right endpoint, the url should look like this :
+>
+> `https://auth0.com/docs/api/management/v2#!/Users/patch_users_by_id`
+
+Once you've got to the endpoint, paste in the `user_id` and the following in the `body` field :
+
+```json
+{
+  "app_metadata": {
+    "allocated_scopes": [
+      "admin"
+    ]
+  }
+}
+```
+
+Then press the **TRY** button. The `allocated_scopes` property in the response that comes back should have the `"admin"` scope in it now. If it's there then **SUCCESS!!**.
+
+![auth0_create_admin_user_4](./documentation/resources/auth0_create_admin_user_4.png)
 
 ### Making a small change to the Hosted Login Page
 
