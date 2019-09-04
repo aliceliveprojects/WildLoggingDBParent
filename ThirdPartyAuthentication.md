@@ -618,7 +618,7 @@ Once the file has been created, paste the following code into the file.
           $timeout(function () {
             $state.go('login');
           });
-          console.log(error);
+          console.log(err);
           alert('Error: ' + err.error + '. Check the console for further details.');
         }
       });
@@ -639,7 +639,8 @@ Once the file has been created, paste the following code into the file.
           if (err) {
             console.log(err);
           } else {
-            localLogin(result);
+            service.localLogin(result);
+            $state.go('admin');
           }
         }
       );
@@ -944,7 +945,7 @@ const CLIENT_CONFIG = {
 
 | SPWA                                                         | REST API                                                     |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| [Third Party Authentication Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported) | [Authenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/authentication_supported_updated_scope_check) |
+| [Third Party Authentication Implemented](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_authentication_supported_with_token_renewal) | [Authenticated REST API](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/authentication_supported_updated_scope_check) |
 
 > See the deployed SPWA [here](https://aliceliveprojects.github.io/WildLoggingAndAdmin).
 >

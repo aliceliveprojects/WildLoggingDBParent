@@ -1,7 +1,3 @@
-
-
-
-
 # Adding Authentication
 
 As of release [SPWA Supported](https://github.com/aliceliveprojects/WildLoggingDB/releases/tag/spwa_supported), the application works as an open data API.
@@ -175,8 +171,6 @@ schemes:
   - http
 ```
 
-
-
 ### Authentication Definition 
 
 We're going to add an authentication definition first, which mirrors the definition we made for the Swagger UI SPWA in the Auth0 account.
@@ -257,29 +251,197 @@ responses:
 
 1. You'll notice a term in in the securityDefinition above; 'scopes'
 2. Scopes are pretty big in OAuth; a scope can be seen as a capability or a priviledge which a client is granted when they access a system via its API.
-3. when a client uses an OAuth service to provide user authorisation for an API, it can supply the scopes it wants within the authorisation request.
+3. When a client uses an OAuth service to provide user authorisation for an API, it can supply the scopes it wants within the authorisation request.
 4. The OAuth service looks up the user associated with the authorisation request, and checks the validity of the requested scope
 5. If the scope is valid, the OAuth server puts it into the authorisation token result.
 6. The client can then pass the authorization token to the API with each http request
 7. Some endpoints will require different scopes
 8. For example an endpoint might provide company data with one scope, and more sensitive data with another.
 
+#### Setting up scopes
+
+To set up scopes we need to create a **Hook** that will allocate **default scopes** to users when they sign up or when they are created through the Auth0 dashboard. We will also need to set up a **Rule** that will **check** whether the user has the scope(s) that they requested for **before giving the requested scope(s)** to them.
+
+### Adding Hooks
+
+When setting up the Auth0 account, there are two operations which have been omitted.
+The effect is that a crucial piece of functionality is not added, which makes Auth0 do the following:
+
+1. Allow scopes to be allocated to users, like '**admin**' or '**research**'
+2. Allows a client application to request this scopes on behalf of a user
 
 
-### Adding the 'admin' scope to the Auth0 API
 
-We're going to ensure that the `wildlogginadmin` authorization adds an 'admin' scope to its token.
+The server application verifies the **JWT** authorisation **TWICE**:
 
-1. In your Auth0 account, click on the API again, to check out the detail:
-2. ![auth0_create_api_4](./documentation/resources/auth0_create_api_4.png)
-3. In addition to the '**settings**' tab, you'll find the **'scopes**' tab. Click on it.
-4. ![auth0_create_api_5](./documentation/resources/auth0_create_api_5.png)
-5. Now add a scope entry called `admin`, and give it a description
-6. You can see that it's no more than a tag, associated with this wildloggingadmin API.
-7. Auth0 has the apbility let you assoicate these scopes with users in the database, so you can give them extra privileges on your API.
-8. For now, we're just using the one scope.
+Generally:
+
+1. Checks the JWT is valid.
+2. Contains essential scopes (admin)
+3. Checks the JWT contains a scope requires by a particular function**(Specific Endpoints)**
 
 
+
+#### Set Auth0 to Allow Scopes
+
+This is the first stage in the process of allowing other users to sign up to our service and allocating to users
+
+The Urban Wild hooks are where we are able to alter the behaviour of Auth0 with Node.js code that is executed in selected extension points. 
+
+When navigating the hooks section you will be greeted with with 3 different types of hooks; Client Credentials Exchange, Post User Registration and Pre User Registration.
+
+In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
+
+![auth0_create_hook_1.png](./documentation/resources/auth0_create_hook_1.png)
+
+Following this you will be greeted with a auth0  modal (pop up) requesting for a name of your hook, we can name whatever we like but on this occasion we will name it something generic so it's not forgettable. Once you have named it just press create.
+
+![auth0_create_hook_2](./documentation/resources/auth0_create_hook_2.png)
+
+
+
+This will reveal a new change to the hooks page allowing access to the hook.
+
+
+
+![auth0_create_hook_3](./documentation/resources/auth0_create_hook_3.png)
+
+Click the **pencil icon** to edit our created hook.
+
+![auth0_create_hook_4](./documentation/resources/auth0_create_hook_4.png)
+
+Assign the following code to the Pre User Registration Hook. The following code adds default scopes to the user's `app_metadata`. **However** . . . for our application, there are no default scopes so we will not assign any.
+
+
+
+> **Replace the existing code for the Hook with the following code :**
+
+```javascript
+/**
+@param {object} user - The user being created
+@param {string} user.tenant - Auth0 tenant name
+@param {string} user.username - user name
+@param {string} user.password - user's password
+@param {string} user.email - email
+@param {boolean} user.emailVerified - is e-mail verified?
+@param {string} user.phoneNumber - phone number
+@param {boolean} user.phoneNumberVerified - is phone number verified?
+@param {object} context - Auth0 connection and other context info
+@param {string} context.requestLanguage - language of the client agent
+@param {object} context.connection - information about the Auth0 connection
+@param {object} context.connection.id - connection id
+@param {object} context.connection.name - connection name
+@param {object} context.connection.tenant - connection tenant
+@param {object} context.webtask - webtask context
+@param {function} cb - function (error, response)
+*/
+module.exports = function (user, context, cb) {
+  var response = {};
+
+  // Add user or app metadata to the newly created user
+  // response.user = {
+  //   user_metadata: { foo: 'bar' },
+  //   app_metadata: { vip: true, score: 7 }
+  // };
+
+  var app_metadata = user.app_metadata || {};
+
+  app_metadata.allocated_scopes = [];
+
+  user.app_metadata = app_metadata;
+
+  response.user = user;
+
+  cb(null, response);
+};
+```
+
+> Note that because our application _does not have any **default scopes**_ we are assigning `app_metadata.allocated_scopes` to be an empty array.
+
+
+
+### **Adding Rules**
+
+OAuth looks up the incoming scopes for the user attempting to login. If the user has the **scope** associated, it is added to the 'scope' property of the outgoing **JWT(JSON Web Token)**.
+
+At the moment, we assume that everybody who has an account will be granted the rights of '**consumer**' and '**member**'
+
+However, what we must do now is to ensure that a claim for researcher or admin is granted only when the user has researcher or admin rights.
+
+Here is a rule which is run on authentication, and gives out only the scopes which are requested, and only if they belong to the user. Defaults of consumer and member are added if they are missing.
+
+##### **Applying rules on Auth0**
+
+
+
+![auth0_create_rule_1](./documentation/resources/auth0_create_rule_1.png)
+
+
+
+Clicking the `+ Create Rule` button shown above will take you to a page where you can select from a number of preset rules. **We are going to add our own rule.** Click on the `empty rule` option.
+
+
+
+![auth0_create_rule_2](./documentation/resources/auth0_create_rule_2.png)
+
+
+
+Once you have selected the `empty rule` option. You will be taken to a page with an editor that will let you write your own rule, **BUT** before we do that, we need to name our rule. We've decided to call ours **`Authorise Scopes In Access Token`**. Call yours the same or something else that is appropriate.
+
+
+
+> **Replace the existing code for the Rule with the following code :**
+
+```javascript
+function (user, context, callback) {
+  var _ = require("lodash");
+
+  var req = context.request;
+
+  // Get requested scopes
+  var scopes = (req.query && req.query.scope) || (req.body && req.body.scope);
+
+  // Normalize scopes into an array
+  scopes = (scopes && scopes.split(" ")) || [];
+
+  // Restrict the access token scopes according to the current user
+  context.accessToken.scope = restrictScopes(user, scopes);
+
+  callback(null, user, context);
+
+  function restrictScopes(user, requested_scopes) {
+    var metadata = user.app_metadata;
+    var allocated_scopes   = metadata.allocated_scopes;
+
+    // Intersect allocated_scopes with requested_scopes to allow the client
+    // application to request less scopes than all the ones the
+    // user has actually access to. For example, the client
+    // application may only want read access even though the
+    // user has write access
+
+    scopes = _.intersection(allocated_scopes, requested_scopes);
+
+    // If the client has requested scopes which are not authorised
+    // it is possible for the scope to be returned as "".
+    // If this happens, the requested scope is returned, meaning that
+    // the client's request is authorised by default. BAD!
+    // The only thing to do is to return something which banjacks the
+    // whole thing.
+
+    var result = []; // This will cause the scope to be removed. 
+
+    if (scopes.length > 0){
+      result = scopes.join(" ");
+    }
+
+    return result;
+  }
+}
+```
+
+#### **Summary on Rules in Auth0**
+
+Rules are written functions that execute when a user authenticates your applications. Once the authentication process is complete and you can use them to customize and extend Auth0's capabilities.
 
 ### Modifying the client
 
@@ -540,9 +702,11 @@ Now we have our one user signed-up, it's time to ensure that we don't over-exten
 1. Go to the 'connections' area in your Auth0 account
 2. You have one 'database' connection: 'Username-Password-Authentication'. Select this one, and view its detail
 3. You'll see a setting 'Disable sign-ups'. **make sure this is checked**
-4. Note: you can still create new users on the account, using the dashboard.
+4. Note: you can still create new users on the account, using the dashboard
 
+### Giving users restricted scopes
 
+See [this section](./ThirdPartyAuthentication.md#creating-a-user-and-giving-them-scopes) in the Third Party Authentication documentation.
 
 ### Use our service to configure its Swagger UI from wherever it's deployed
 
@@ -1119,178 +1283,6 @@ Simply change the domain from localhost, to the one you deployed to. In our case
 
 
 ![swagger_spwa_4](./documentation/resources/auth0_create_app_8.png)
-
-
-
-### Adding Hooks
-
-When setting up the Auth0 account, there are two operations which have been omitted.
-The effect is that a crucial piece of functionality is not added, which makes Auth0 do the following:
-
-1. Allow scopes to be allocated to users, like '**admin**' or '**research**'
-2. Allows a client application to request this scopes on behalf of a user
-
-
-
-The server application verifies the **JWT** authorisation **TWICE**:
-
-Generally:
-
-1. Checks the JWT is valid.
-2. Contains essential scopes (admin)
-3. Checks the JWT contains a scope requires by a particular function**(Specific Endpoints)**
-
-
-
-#### Set Auth0 to Allow Scopes
-
-This is the first stage in the process of allowing other users to sign up to our service and allocating to users
-
-The Urban Wild hooks are where we are able to alter the behaviour of Auth0 with Node.js code that is executed in selected extension points. 
-
-When naviagating the hooks section you will be greeted with with 3 different types of hooks; Client Credentials Exchange, Post User Registration and Pre User Registration.
-
-In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
-
-![auth0_hooks_banner](./documentation/resources/auth0_hooks_banner.png)
-
-Following this you will be greeted with a auth0  modal (pop up) requesting for a name of your hook, we can name whatever we like but on this occasion we will name it something generic so it's not forgettable. Once you have named it just press create.
-
-![auth0_createHook_modal](./documentation/resources/auth0_createHook_modal.png)
-
-
-
-This will reveal a new change to the hooks page allowing access to the hook.
-
-
-
-![auth0_preRegistration_banner](./documentation/resources/auth0_preRegistration_banner.png)
-
-Click the **pencil icon** to take you over to the text editor for our created hook.
-
-![auth0_editHook_page](./documentation/resources/auth0_editHook_page.png)
-
-Assign the following code to the Pre User Registration Hook. The following code adds default scopes to the user's **app_metadata**; now it is possible to have a user within restricted scopes such as **consumer and member**.
-
-
-
-> **The following code must be added to Auth0**
-
-```javascript
-/**
-@param {object} user - The user being created
-@param {string} user.tenant - Auth0 tenant name
-@param {string} user.username - user name
-@param {string} user.password - user's password
-@param {string} user.email - email
-@param {boolean} user.emailVerified - is e-mail verified?
-@param {string} user.phoneNumber - phone number
-@param {boolean} user.phoneNumberVerified - is phone number verified?
-@param {object} context - Auth0 connection and other context info
-@param {string} context.requestLanguage - language of the client agent
-@param {object} context.connection - information about the Auth0 connection
-@param {object} context.connection.id - connection id
-@param {object} context.connection.name - connection name
-@param {object} context.connection.tenant - connection tenant
-@param {object} context.webtask - webtask context
-@param {function} cb - function (error, response)
-*/
-
-module.exports = function (user, context, cb) {
-    var response = {};
-  
-    // Add user or app metadata to the newly created user
-    // response.user = {
-    //   user_metadata: { foo: 'bar' },
-    //   app_metadata: { vip: true, score: 7 }
-    // };
-  
-    var app_metadata = user.app_metadata || {};
-    
-    app_metadata.allocated_scopes = [];
-  
-    user.app_metadata = app_metadata;
-  
-    response.user = user;
-  
-    cb(null, response);
-  
-  };
-  
-```
-
-
-
-### **Adding Rules**
-
-OAuth looks up the incoming scopes for the user attempting to login. If the user has the **scope** associated, it is added to the 'scope' property of the outgoing **JWT(JSON Web Token)**.
-
-At the moment, we assume that everybody who has an account will be granted the rights of '**consumer**' and '**member**'
-
-However, what we must do now is to ensure that a claim for researcher or admin is granted only when the user has researcher or admin rights.
-
-Here is a rule which is run on authentication, and gives out only the scopes which are requested, and only if they belong to the user. Defaults of consumer and member are added if they are missing.
-
-
-
-##### **Applying rules on Auth0**
-
-![auth0_rules_banner](./documentation/resources/auth0_rules_banner.png)
-
-> **The following code must be added to Auth0**
-
-```javascript
-function (user, context, callback) {
-  var _ = require("lodash");
-  
-  var req = context.request;
-
-  // Get requested scopes
-  var scopes = (req.query && req.query.scope) || (req.body && req.body.scope);
-    
-  // Normalize scopes into an array
-  scopes = (scopes && scopes.split(" ")) || [];
-
-  // Restrict the access token scopes according to the current user
-  context.accessToken.scope = restrictScopes(user, scopes);
-  
-  callback(null, user, context);
-  
-  function restrictScopes(user, requested_scopes) {
-    // Full list of scopes available hardcoded for demo purposes
-    
-    var metadata = user.app_metadata;
-    var allocated_scopes   = metadata.allocated_scopes;
-    
-    // Intersect allocated_scopes with requested_scopes to allow the client
-    // application to request less scopes than all the ones the
-    // user has actually access to. For example, the client
-    // application may only want read access even though the
-    // user has write access
-   
-    scopes = _.intersection(allocated_scopes, requested_scopes);
-    
-    // if the client has requested scopes which are not authorised
-    // it is possible for the scope to be returned as ""
-    // if this happens, the requested scope is returned, meaning that
-    // the client's request is authorised by default. BAD!
-    // The only thing to do is to return something which banjacks the
-    // whole thing.
-    
-    var result = []; // this will cause the scope to be removed. 
-    
-    if (scopes.length > 0){
-      result = scopes.join(" ");
-    }
-        
-    return result;
-  }
-}
-```
-
-#### **Summary on Rules in Auth0**
-
-Rules are written functions that execute when a user authenticates your applications. Once the authentication process is complete and you can use them to customize and extend Auth0's capabilities.
 
 ## Release
 
