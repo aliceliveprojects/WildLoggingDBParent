@@ -8,7 +8,7 @@ First Party Authentication means that we will only grant access to the authentic
 
 Due to Cross-Origin restrictions, the browser **won't support the use of SPWAs served from other domains** (such as GitHub Pages) . 
 
-To do that, we need to enable the Auth0 account, and we need to add some authentication smarts to the SPWA.
+To do that, we need to enable some things on the Auth0 account, and we need to add some authentication smarts to the SPWA.
 
 In this case, the SPWA we'll be upgrading is **[WildLogging](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/v.1.0)**. 
 
@@ -49,6 +49,18 @@ This is exactly what we will be facilitating by making the API available to thir
    1. **They had better be very sure they know this app is safe**
    2. This is the reason for certification (trust certificates) on the browser address bar.
 
+## Your own SPWA repo
+
+Log into GitHub and create a repository.
+
+We've called ours **WildLoggingAndAdmin**.
+
+Tick the box shown below to initialise the repo with a README when you create it :
+
+![auth0_create_spwa_repo_readme](documentation/resources/auth0_create_spwa_repo_readme.png)
+
+Clone the repo you created using GitHub Desktop.
+
 ## Auth0 Third Party Authentication
 
 When you set up your account with Auth0, you're given the ability to add applications and APIs to a Tenant. 
@@ -87,8 +99,10 @@ Enabling the OIDC Dynamic Application Registration will allow us to add a third 
 curl --request POST \
 --url 'https://<YOUR_TENANT_DOMAIN>/oidc/register' \
 --header 'content-type: application/json' \
---data '{"client_name":"<NAME_YOUR_THIRD_PARTY_APPLICATION>","redirect_uris": ["https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth", "http://localhost:5500/#/admin/auth"]}'
+--data '{"client_name":"<NAME_YOUR_THIRD_PARTY_APPLICATION>","redirect_uris": ["https://<YOUR_GITHUB_USERNAME>.github.io/<NAME_OF_YOUR_SPWA_REPO>/admin/auth", "http://localhost:5500/#/admin/auth"]}'
 ```
+
+> Note that <NAME_OF_SPWA> is the name of the repo that you created.
 
 Then paste your modified cURL request into the terminal and hit enter.
 
@@ -100,7 +114,7 @@ Then paste your modified cURL request into the terminal and hit enter.
   "client_id":"<YOUR_THIRD_PARTY_APP'S_CLIENT_ID>",
   "client_secret":"LALALALALALALALALAIMNOTTELLING",
   "redirect_uris":[
-    "https://<YOUR_GITHUB_USERNAME>.github.io/WildLoggingAndAdmin/admin/auth",
+    "https://<YOUR_GITHUB_USERNAME>.github.io/<NAME_OF_YOUR_SPWA_REPO>/admin/auth",
     "http://localhost:5500/#/admin/auth"
   ],
   "client_secret_expires_at":0
@@ -179,6 +193,74 @@ The response should look something like the following:
 ![auth0_promote_connections_7](./documentation/resources/auth0_promote_connections_7.png)
 
 If the `"is_domain_connection"` field is set to `true` then **SUCCESS!**. We have successfully promoted our database connection. :)
+
+### Allowed Web Origins
+
+We now want to set up **Allowed Web Origins** as it is needed for [Silent Authentication](https://auth0.com/docs/api-auth/tutorials/silent-authentication) (which renews tokens) to work properly.
+
+The application needs to specify the web origins (domains) that it will be served from. Once again we will use the [Management API](https://auth0.com/docs/api/management/v2#!/Clients/patch_clients_by_id) to do this. Go to the management API and give it your Auth0 Management API's token as shown earlier.
+
+You should automatically be on the `Update A Client` endpoint after clicking on the link and giving it the token. If you are, give it the Client ID of your third party application. Before you make the request, paste the following into the `body` field after replacing the placeholders with the values for your client/github :
+
+```json
+{
+  "web_origins": [
+    "https://<YOUR_GITHUB_USERNAME>.github.io",
+    "http://localhost:5500"
+  ]
+}
+```
+
+> NOTE: You should make sure that the port after `localhost` matches the port that the SPWA is served on locally.
+
+#### Why is this needed?
+
+Auth0 says that Third Party apps must contact the tenant in order to make changes to its settings. This is good because it requires that the developer of the third party app will have to contact the developer who owns the tenant (both of these people are you whilst following this guide).
+
+##### The Alternative
+
+The alternative option is to not implement [Silent Authentication](https://auth0.com/docs/api-auth/tutorials/silent-authentication) and instead, force the user to login every time. This can be achieved by logging the user out of their Auth0 session every time they log out, or come back to the application after closing it without logging out. The effect of doing this is as follows :
+
+* Whenever the user logs out and then tries to log back in, they will have to enter their username and password.
+* Whenever the user closes the tab, without logging out, the next time they go to the SPWA, they will have to log in again by entering their username and password.
+
+##### How to implement the alternative
+
+The steps to take require some modifications to your third party application's settings on the Auth0 dashboard as well as some changes to the code you will be writing later on. For now, if you want to implement the alternative, follow the outlined steps below instead of adding Allowed Web Origins to everything else. if you don't want to implement the alternative, [skip the following steps](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/ThirdPartyAuthentication.md#creating-a-user-and-giving-them-scopes).
+
+#####  Undo what you just set up
+
+Remove the Allowed Web Origins that you setup as you will not be using them. Go to the Auth0 dashboard, find your third party application, and clear out the Allowed Web Origins.
+
+##### Tell Auth0 what your logout URLs are
+
+After you have removed the Allowed Web Origins, add your logout url for localhost and github pages. They should look like the following (substitute your data in where necessary) :
+
+```
+https:/<YOUR_GITHUB_USERNAME>.github.io/<NAME_OF_YOUR_SPWA_REPO>/,
+http://localhost:5500
+```
+
+That's it for the things you need to do to on the Auth0 dashboard in order to remove silent authentication and force the user to log in all the time. The rest of the things you need to do, pertain to the actual code that you will be writing as you follow this how-to/guide. You do not need to know what these pieces of code are just yet, but rest assured that you will be very clearly informed later on in the guide about what code you need to change and where you need to change it.
+
+#### Example code snippet
+
+```javascript
+service.logout = function logout() {
+
+  // Logout of Auth0 removing the session the user had with it.
+  angularAuth0.logout({
+    returnTo: document.getElementsByTagName("base")[0].href
+  });
+  
+  // Remove isLoggedIn flag from localStorage because we have logged out.
+  localStorage.removeItem('isLoggedIn');
+  // Remove tokens and expiry time
+  accessToken = '';
+  idToken = '';
+  expiresAt = 0;
+}
+```
 
 ### Creating a user and giving them scopes
 
@@ -342,9 +424,9 @@ This is the same as the code that was already there except for one line. The new
 
 ## Adding authentication to the SPWA
 
-Download [this release](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_with_admin_and_login_modules) of the WildLogging SPWA.
+Download [this release](https://github.com/aliceliveprojects/WildLoggingAndAdmin/releases/tag/spwa_with_admin_and_login_modules) of the WildLogging SPWA. Once you've unpacked the compressed file, move the contents into the folder that you cloned your repo into and check it in to GitHub.
 
-Open the downloaded SPWA in VSCode. You should see a directory structure that looks like the following :
+Open the cloned SPWA folder in VSCode. You should see a directory structure that looks like the following :
 
 ![third_party_spwa_1](./documentation/resources/third_party_spwa_1.png)
 
@@ -363,6 +445,20 @@ The following code snippets show what lines to comment out and which files they 
 <base href="/WildLoggingAndAdmin/"> <!-- Comment out this line -->
 <link rel="manifest" href="manifest.json"> <!-- Comment out or delete this line too as we don't have a manifest.json file to link -->
 ```
+
+> **WHY?** Why does this need to be done? This needs to be done because of the way GitHub Pages **routes to our SPWA**. When a GitHub user/organization create a repository and publishes their master or gh-pages branch, **GitHub creates a subdomain for them using their user/organization name**. For example :
+>
+> 1. We create a new organization. Let's call it (BobDigitalLabs).
+> 2. We then create a repo called CompanySPWA and put our source files for our SPWA in the master branch.
+> 3. We go into the repo's settings and publish our site on GitHub Pages.
+> 4. GitHub will probably say something like "Your site is published at _bobdigitallabs.github.io/**CompanySPWA**_".
+> 5. We create another repo called WildLoggingAndAdminForBob and put our WildLoggingAndAdmin SPWA in there, but this time, with a few personalizations for Bob.
+> 6. See step 3.
+> 7. GitHub will say something like "Your site is published at _bobdigitallabs.github.io/**WildLoggingAndAdminForBob**_".
+>
+> This happens because instead of creating a new subdomain for each repo (which would be costly for GitHub to do) GitHub instead creates one subdomain for each organization and **HOSTS EACH REPOSITORY IN IT'S OWN FOLDER** which is why the **part of the URL that differs** in the examples above is **not the domain**, but rather, **the file path at that domain**.
+>
+> The **`<base>`** tag is **used to attach the path that differentiates each of the repos** owned by an organization or user **to the end of the domain**. Without it **AngularJS replaces the path part** in the URL and **Auth0 doesn't redirect to our callback properly**.
 
 #### app.js
 
@@ -669,6 +765,57 @@ Once the file has been created, paste the following code into the file.
 })();
 ```
 
+> If you did not set up **Allowed Web Origins** towards the beginning of this guide, and instead setup **Allowed Logout URLs**, then you need to make a few changes to the above auth.service.js file. If you didn't, [skip the following steps](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/ThirdPartyAuthentication.md#configuring-the-authentication-service).
+
+Delete the function called `service.renewTokens` form auth.service.js.
+
+Then replace this piece of code in auth.service.js :
+
+```javascript
+service.logout = function logout() {
+  // Remove isLoggedIn flag from localStorage
+  localStorage.removeItem('isLoggedIn');
+  // Remove tokens and expiry time
+  accessToken = '';
+  idToken = '';
+  expiresAt = 0;
+}
+```
+
+with this when developing on localhost :
+
+```javascript
+service.logout = function logout() {
+  // Logout of Auth0 removing the session the user had with it.
+  angularAuth0.logout({
+    returnTo: window.location.origin
+  });
+  // Remove isLoggedIn flag from localStorage because we have logged out of Auth0.
+  localStorage.removeItem('isLoggedIn');
+  // Remove tokens and expiry time.
+  accessToken = '';
+  idToken = '';
+  expiresAt = 0;
+}
+```
+
+and this before checking in the changes :
+
+```javascript
+service.logout = function logout() {
+  // Logout of Auth0 removing the session the user had with it.
+  angularAuth0.logout({
+    returnTo: document.getElementsByTagName("base")[0].href
+  });
+  // Remove isLoggedIn flag from localStorage because we have logged out of Auth0.
+  localStorage.removeItem('isLoggedIn');
+  // Remove tokens and expiry time.
+  accessToken = '';
+  idToken = '';
+  expiresAt = 0;
+}
+```
+
 ##### Configuring the authentication service
 
 For the service to work properly it needs to be configured. This is done by adding the following into the `app.js` file :
@@ -704,6 +851,24 @@ We are also going to add some logic to the `.run()` function in `app.js`. Replac
     });
 
 });
+```
+
+> If you did not set up **Allowed Web Origins** towards the beginning of this guide, and instead setup **Allowed Logout URLs**, then you need to make a few changes to the above app.js file's `run` function. If you didn't, skip the following step :
+
+Replace this :
+
+```javascript
+if (localStorage.getItem('isLoggedIn') === 'true') {
+    authService.renewTokens();
+} else {
+```
+
+in the app.js file's `run` function with this :
+
+```javascript
+if (localStorage.getItem('isLoggedIn') === 'true') {
+    authService.logout();
+} else {
 ```
 
 Replace the code in the file called `auth0-variables.js` with the following code :
