@@ -243,25 +243,6 @@ http://localhost:5500
 
 That's it for the things you need to do to on the Auth0 dashboard in order to remove silent authentication and force the user to log in all the time. The rest of the things you need to do, pertain to the actual code that you will be writing as you follow this how-to/guide. You do not need to know what these pieces of code are just yet, but rest assured that you will be very clearly informed later on in the guide about what code you need to change and where you need to change it.
 
-#### Example code snippet
-
-```javascript
-service.logout = function logout() {
-
-  // Logout of Auth0 removing the session the user had with it.
-  angularAuth0.logout({
-    returnTo: document.getElementsByTagName("base")[0].href
-  });
-  
-  // Remove isLoggedIn flag from localStorage because we have logged out.
-  localStorage.removeItem('isLoggedIn');
-  // Remove tokens and expiry time
-  accessToken = '';
-  idToken = '';
-  expiresAt = 0;
-}
-```
-
 ### Creating a user and giving them scopes
 
 When we test our SPWA, we are going to need a test user to login with. This user will be given the `admin` scope and will act as an administrator for our SPWA who can go to the SPWA, login (because they were given admin scope) and perform DELETE and PUT requests to our API.
