@@ -1,29 +1,27 @@
-# WildLoggingDB - Re-implementing an API
+# WildLogging
 
-This project is a sequel to [WildLogging](https://github.com/TheUrbanWild/WildLogging).
+WildLogging is a web application which we built to show how the JAM Stack works (Javascript, API, Markup). 
+It's a pretty simple responsive app which lets anyone log wildlife sightings in their neighbourhood.
 
-It is the parent project to:
+You can find it deployed on GitHub Pages,  [here](https://aliceliveprojects.github.io/WildLoggingAndAdmin)
 
-* [WildLogging](https://github.com/aliceliveprojects/WildLogging) (A fork of the original)
-* [WildLoggingDB](https://github.com/aliceliveprojects/WildLoggingDB)
+The WildLogging App depends on an API, which fronts a database. You can find the API UI [here](https://urbanwilddbapi.herokuapp.com/docs). 
 
-UrbanWild is the project we use to demonstrate how we put together prototypes quickly, as a team. You can find it [here](https://github.com/TheUrbanWild/WildLogging).
+Here's where you can find the source code:
 
-We use the RESTlet platform to provide us with very fast (Free) way of prototyping data APIs - in this case, we logged species and sightings.
+* for the web application: [here](https://github.com/aliceliveprojects/WildLoggingAndAdmin)
+* for the API: [here](https://github.com/aliceliveprojects/WildLoggingDB)
 
-After a merger, Restlet has changed its service terms. We need to remove our dependency on this service.
 
-We will transfer our dependency to Heroku, running a Postgres DB.
+We originally built the project to show the wonder of Platforms-as-a-Service: We used a fantastic service called Restlet, which gave us an online database and UI tools to easily make the RESTFul API to wrap it. Alas Restlet was swallowed by a larger organisation and the service was discontinued. It really helped us though: we could produce a data API in just a few minutes.
 
-Incidentally, this development has the potential for use of the geo searching capabilities of Postgres.
+# About this project
+Now the project has moved on: we removed the dependency on Restlet, by creating a new API and our own Postgres DB.
 
-## Why are we doing this?
+For history's sake, you can see the original project [here](https://github.com/TheUrbanWild/WildLogging).
+You can see the re-worked project [here](https://github.com/aliceliveprojects/WildLogging) 
 
-Restlet Cloud is the PaaS which we have been using. It's service hosted a database, fronted by a REST API, which the Urban Wild SPWA used to store wildlife sightings.
-
-Restlet was great as a platform for showing what RESTful interfaces are and how they work. 
-
-Now we want to build on this experience, and show you how the RESTful API definition (using the Open API Specification ([which used to be Swagger](https://swagger.io/docs/specification/about/))) we built in Restlet Studio can be used to generate a skeleton server, and a database back-end, without too much more effort.
+Now we'll show you how the RESTful API definition (using the Open API Specification ([which used to be Swagger](https://swagger.io/docs/specification/about/))) we built in Restlet Studio can be used to generate a skeleton server, and a database back-end, without too much more effort.
 
 The result is much more useful, because we can add functionality which transforms the data, rather than just looking it up. Doing more processing on the server means that we reduce the communications traffic, and the processing done on the client.
 
@@ -35,9 +33,9 @@ Follow along:  it's a good way to experience all the tools and processes, while 
 
 We've got a number of scripts to go through, in order:
 
-* [Re-implementing the API](./ReImplementing.md)
-* [First Party Authentication](./Authentication.md)
-* [Third-Party Authentication](./ThirdPartyAuthentication.md)
+* [Re-implementing the API](./ReImplementing.md) - this shows you how we created a Postgres DB behind the same RESTful API - so we ddn't have to change the client.
+* [First Party Authentication](./Authentication.md) - this shows you how we added authentication to the sensitive parts of the API, which delete data. We  show you how to use the authentication service, Auth0
+* [Third-Party Authentication](./ThirdPartyAuthentication.md) - this shows how we added thir-[art 
 
 ## Repository Cheatsheet
 
