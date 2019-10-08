@@ -3,7 +3,7 @@
 WildLogging is a web application which we built to show how the JAM Stack works (Javascript, API, Markup). 
 It's a pretty simple responsive app which lets anyone log wildlife sightings in their neighbourhood.
 
-You can find it deployed on GitHub Pages,  [here](https://aliceliveprojects.github.io/WildLoggingAndAdmin)
+You can find the SPWA (Single Page Web Application) deployed on GitHub Pages,  [here](https://aliceliveprojects.github.io/WildLoggingAndAdmin)
 
 The WildLogging App depends on an API, which fronts a database. You can find the API UI [here](https://urbanwilddbapi.herokuapp.com/docs). 
 
@@ -11,6 +11,14 @@ Here's where you can find the source code:
 
 * for the web application: [here](https://github.com/aliceliveprojects/WildLoggingAndAdmin)
 * for the API: [here](https://github.com/aliceliveprojects/WildLoggingDB)
+
+Here's how we developed the project:  
+
+* [See our planning boards on Trello](https://trello.com/b/rRl2fKYh/the-urban-wild)  
+* [See our quick and dirty wireframes on GitHubPages](https://theurbanwild.github.io/WildFrames/wireframes/published)  
+* [See our deliveries in this repo](https://github.com/TheUrbanWild/WildLogging/tree/master/documentation/deliveries)
+* [See our investigations demo](https://theurbanwildtest.github.io/)  
+* [See our development write up](https://digitallabs.mmu.ac.uk/taming-the-urban-wild/)
 
 
 We originally built the project to show the wonder of Platforms-as-a-Service: We used a fantastic service called Restlet, which gave us an online database and UI tools to easily make the RESTFul API to wrap it. Alas Restlet was swallowed by a larger organisation and the service was discontinued. It really helped us though: we could produce a data API in just a few minutes.
