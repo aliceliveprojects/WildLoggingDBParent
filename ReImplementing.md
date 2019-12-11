@@ -17,12 +17,12 @@ We created a new GitHub Repo [here]() to hold our project source code. We didn't
 
 You can create a new fresh repo, on GitHub  if you're following along, or fork ours.
 
-## Set-up RESTlet
+## Set-up the REST editor
 
-**WHOA!!!** Before you go on, a couple of really important things:
+**WHOA!!! Before you go on, a couple of really important things:
 
 * Restlet Studio has now been removed, and is no longer a free-to-access service.
-* The OpenAPI community is moving from Swagger 2.0 to OpenAPI 3.0.
+* The OpenAPI community is moving from Swagger 2.0 to OpenAPI 3.0.**
 
 A really nice alternative to Restlet Studio is [OpenAPI GUI V2](https://mikeralphson.github.io/openapi-gui/), which takes the hassle out of writing YAML specs. Use this instead.
 Please note: there is another version of the tool: OpenAPI GUI V3, which outputs as OpenAPI spec V3. Please don't use this: we depend on the Swagger Editor a little further along, to generate a skeleton server for us. The generator hassome issues at the moment with Open API V3, and running the generated server will fail.
