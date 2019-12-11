@@ -19,18 +19,27 @@ You can create a new fresh repo, on GitHub  if you're following along, or fork o
 
 ## Set-up RESTlet
 
-We use [**Restlet Studio**](https://studio.restlet.com/apis/local/info) for building an and editing REST API definitions.
+**WHOA!!!** Before you go on, a couple of really important things:
 
-The Restlet API for urban wild is public.  
-The original account is available [here](https://cloud.restlet.com/apis/25850/versions/1/overview)  
-The REST API definition is [here](https://cloud.restlet.com/api/apis/25850/versions/1/swagger2?media=json), and copied to this repo [here](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/documentation/restlet/swagger.yaml)  
-Now we have the definition of the interface, to use in this project. Note: RESTlet's UI is the best for creating interfaces. Well worth getting an account and using it.
+* Restlet Studio has now been removed, and is no longer a free-to-access service.
+* The OpenAPI community is moving from Swagger 2.0 to OpenAPI 3.0.
 
-1. We created a RESTlet account for the project identity
+A really nice alternative to Restlet Studio is [OpenAPI GUI V2](https://mikeralphson.github.io/openapi-gui/), which takes the hassle out of writing YAML specs. Use this instead.
+Please note: there is another version of the tool: OpenAPI GUI V3, which outputs as OpenAPI spec V3. Please don't use this: we depend on the Swagger Editor a little further along, to generate a skeleton server for us. The generator hassome issues at the moment with Open API V3, and running the generated server will fail.
+
+~We use [**Restlet Studio**](https://studio.restlet.com/apis/local/info) for building an and editing REST API definitions.~
+
+~The Restlet API for urban wild is public.~  
+~The original account is available [here](https://cloud.restlet.com/apis/25850/versions/1/overview)~  
+~The REST API definition is [here](https://cloud.restlet.com/api/apis/25850/versions/1/swagger2?media=json),~ and copied to this repo [here](https://github.com/aliceliveprojects/WildLoggingDBParent/blob/master/documentation/restlet/swagger.yaml)  
+Now we have the definition of the interface, to use in this project. 
+~Note: RESTlet's UI is the best for creating interfaces. Well worth getting an account and using it.~
+
+~1. We created a RESTlet account for the project identity~
+
+Onwards, please use: [OpenAPI GUI V2](https://mikeralphson.github.io/openapi-gui/)
 
 2. We imported the REST API definition into the Restlet Studio Tool, to take a look:
-
-
 
    ![here](./documentation/resources/restlet_api_def.png)
 
