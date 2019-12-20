@@ -43,7 +43,7 @@ We've got a number of scripts to go through, in order:
 
 * [Re-implementing the API](./ReImplementing.md) - this shows you how we created a Postgres DB behind the same RESTful API - so we ddn't have to change the client.
 * [First Party Authentication](./Authentication.md) - this shows you how we added authentication to the sensitive parts of the API, which delete data. We  show you how to use the authentication service, Auth0
-* [Third-Party Authentication](./ThirdPartyAuthentication.md) - this shows how we added thir-[art 
+* [Third-Party Authentication](./ThirdPartyAuthentication.md) - this shows how we added authentication for SPWAs which are not on the same domain as the one serving the API. It's how we create useful SPWAs on GitHub pages. All the infrastructure we use is free-tier. As soon as there is a requirement to be on the same domain, then we have to start paying. This is the work-around, to let us prototype and illustrate Apps, APIs and DBs.
 
 ## Repository Cheatsheet
 
